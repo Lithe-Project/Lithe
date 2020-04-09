@@ -184,27 +184,27 @@ public:
       s(m_lastBlockHash, "last_block");
     }
 
-    logger(INFO) << operation << "block index";
+    logger(INFO, GREEN) << operation << "block index";
     s(m_bs.m_blockIndex, "block_index");
 
-    logger(INFO) << operation << "transaction map";
+    logger(INFO, GREEN) << operation << "transaction map";
     s(m_bs.m_transactionMap, "transactions");
 
-    logger(INFO) << operation << "spent keys";
+    logger(INFO, GREEN) << operation << "spent keys";
     s(m_bs.m_spent_keys, "spent_keys");
 
-    logger(INFO) << operation << "outputs";
+    logger(INFO, GREEN) << operation << "outputs";
     s(m_bs.m_outputs, "outputs");
 
-    logger(INFO) << operation << "multi-signature outputs";
+    logger(INFO, GREEN) << operation << "multi-signature outputs";
     s(m_bs.m_multisignatureOutputs, "multisig_outputs");
 
-    logger(INFO) << operation << "deposit index";
+    logger(INFO, GREEN) << operation << "deposit index";
     s(m_bs.m_depositIndex, "deposit_index");
 
     auto dur = std::chrono::steady_clock::now() - start;
 
-    logger(INFO) << "Serialization time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dur).count() << "ms";
+    logger(INFO, GREEN) << "Serialization time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dur).count() << "ms";
 
     m_loaded = true;
   }
@@ -254,13 +254,13 @@ public:
       s(m_lastBlockHash, "blockHash");
     }
 
-    logger(INFO) << operation << "paymentID index";
+    logger(INFO, GREEN) << operation << "paymentID index";
     s(m_bs.m_paymentIdIndex, "paymentIdIndex");
 
-    logger(INFO) << operation << "timestamp index";
+    logger(INFO, GREEN) << operation << "timestamp index";
     s(m_bs.m_timestampIndex, "timestampIndex");
 
-    logger(INFO) << operation << "generated transactions index";
+    logger(INFO, GREEN) << operation << "generated transactions index";
     s(m_bs.m_generatedTransactionsIndex, "generatedTransactionsIndex");
 
     m_loaded = true;
@@ -287,13 +287,13 @@ public:
       ar & m_lastBlockHash;
     }
 
-    logger(INFO) << operation << "paymentID index";
+    logger(INFO, GREEN) << operation << "paymentID index";
     ar & m_bs.m_paymentIdIndex;
 
-    logger(INFO) << operation << "timestamp index";
+    logger(INFO, GREEN) << operation << "timestamp index";
     ar & m_bs.m_timestampIndex;
 
-    logger(INFO) << operation << "generated transactions index";
+    logger(INFO, GREEN) << operation << "generated transactions index";
     ar & m_bs.m_generatedTransactionsIndex;
 
     m_loaded = true;
@@ -444,19 +444,19 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
   }
 
   if (m_blocks.empty()) {
-    logger(INFO, BRIGHT_WHITE)
-      << "Blockchain not loaded, generating genesis block.";
+    logger(INFO, BRIGHT_MAGENTA)
+      << "- Blockchain.cpp - Blockchain not loaded, generating genesis block.";
 
     block_verification_context bvc = boost::value_initialized<block_verification_context>();
     pushBlock(m_currency.genesisBlock(), get_block_hash(m_currency.genesisBlock()), bvc, 0);
     if (bvc.m_verification_failed) {
-      logger(ERROR, BRIGHT_RED) << "Failed to add genesis block to blockchain";
+      logger(ERROR, BRIGHT_RED) << "- Blockchain.cpp - Failed to add genesis block to blockchain";
       return false;
     }
   } else {
     Crypto::Hash firstBlockHash = get_block_hash(m_blocks[0].bl);
     if (!(firstBlockHash == m_currency.genesisBlockHash())) {
-      logger(ERROR, BRIGHT_RED) << "Failed to init: genesis block mismatch. "
+      logger(ERROR, BRIGHT_RED) << "- Blockchain.cpp - Failed to init: genesis block mismatch. "
         "Probably you set --testnet flag with data "
         "dir with non-test blockchain or another "
         "network.";
@@ -468,7 +468,7 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
      valid checkpoint and try again. */
   uint32_t lastValidCheckpointHeight = 0;
   if (!checkCheckpoints(lastValidCheckpointHeight)) {
-    logger(WARNING, BRIGHT_YELLOW) << "Invalid checkpoint. Rollback blockchain to last valid checkpoint at height " << lastValidCheckpointHeight;
+    logger(WARNING, BRIGHT_YELLOW) << "- Blockchain.cpp - Invalid checkpoint. Rollback blockchain to last valid checkpoint at height " << lastValidCheckpointHeight;
     rollbackBlockchainTo(lastValidCheckpointHeight);
   }
 
@@ -502,7 +502,7 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
   }
 
   logger(INFO, BRIGHT_GREEN)
-    << "Blockchain initialized. last block: " << m_blocks.size() - 1 << ", "
+    << "- Blockchain.cpp - Blockchain initialized. last block: " << m_blocks.size() - 1 << ", "
     << Common::timeIntervalToString(timestamp_diff)
     << " time ago, current difficulty: " << getDifficultyForNextBlock();
 
@@ -522,7 +522,7 @@ bool Blockchain::checkCheckpoints(uint32_t& lastValidCheckpointHeight) {
       return false;
     }
   }
-  logger(INFO, BRIGHT_WHITE) << "Checkpoints passed";
+  logger(INFO, BRIGHT_MAGENTA) << "- Blockchain.cpp - Checkpoints passed";
   return true;
 }
 
@@ -2492,11 +2492,11 @@ bool Blockchain::validateInput(const MultisignatureInput& input, const Crypto::H
 }
 
 bool Blockchain::rollbackBlockchainTo(uint32_t height) {
-  logger(INFO) << "Rolling back blockchain to " << height;
+  logger(INFO, YELLOW) << "Rolling back blockchain to " << height;
   while (height + 1 < m_blocks.size()) {
     removeLastBlock();
   }
-  logger(INFO) << "Rollback complete. Synchronization will resume.";  
+  logger(INFO, GREEN) << "Rollback complete. Synchronization will resume.";  
   return true;
 }
 

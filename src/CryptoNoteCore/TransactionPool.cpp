@@ -114,7 +114,7 @@ namespace CryptoNote {
     uint64_t outputs_amount = get_outs_money_amount(tx);
 
     if (outputs_amount > inputs_amount) {
-      logger(INFO) << "<< TransactionPool.cpp << " << "transaction use more money then it has: use " << m_currency.formatAmount(outputs_amount) <<
+      logger(INFO, RED) << "- TransactionPool.cpp - " << "transaction use more money then it has: use " << m_currency.formatAmount(outputs_amount) <<
         ", have " << m_currency.formatAmount(inputs_amount);
       tvc.m_verification_failed = true;
       return false;
@@ -133,17 +133,17 @@ namespace CryptoNote {
     if (ttl.ttl != 0 && !keptByBlock) {
       uint64_t now = static_cast<uint64_t>(time(nullptr));
       if (ttl.ttl <= now) {
-        logger(WARNING, BRIGHT_YELLOW) << "<< TransactionPool.cpp << " << "Transaction TTL has already expired: tx = " << id << ", ttl = " << ttl.ttl;
+        logger(WARNING, YELLOW) << "- TransactionPool.cpp - " << "Transaction TTL has already expired: tx = " << id << ", ttl = " << ttl.ttl;
         tvc.m_verification_failed = true;
         return false;
       } else if (ttl.ttl - now > m_currency.mempoolTxLiveTime() + m_currency.blockFutureTimeLimit()) {
-        logger(WARNING, BRIGHT_YELLOW) << "<< TransactionPool.cpp << " << "Transaction TTL is out of range: tx = " << id << ", ttl = " << ttl.ttl;
+        logger(WARNING, YELLOW) << "- TransactionPool.cpp - " << "Transaction TTL is out of range: tx = " << id << ", ttl = " << ttl.ttl;
         tvc.m_verification_failed = true;
         return false;
       }
 
       if (fee != 0) {
-        logger(WARNING, BRIGHT_YELLOW) << "<< TransactionPool.cpp << " << "Transaction with TTL has non-zero fee: tx = " << id << ", fee = " << m_currency.formatAmount(fee);
+        logger(WARNING, YELLOW) << "- TransactionPool.cpp - " << "Transaction with TTL has non-zero fee: tx = " << id << ", fee = " << m_currency.formatAmount(fee);
         tvc.m_verification_failed = true;
         return false;
       }
@@ -153,7 +153,7 @@ namespace CryptoNote {
     if (!keptByBlock) {
       std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
       if (haveSpentInputs(tx)) {
-        logger(INFO) << "<< TransactionPool.cpp << " << "Transaction with id= " << id << " used already spent inputs";
+        logger(INFO, YELLOW) << "- TransactionPool.cpp - " << "Transaction with id= " << id << " used already spent inputs";
         tvc.m_verification_failed = true;
         return false;
       }
@@ -166,7 +166,7 @@ namespace CryptoNote {
 
     if (!inputsValid) {
       if (!keptByBlock) {
-        logger(INFO) << "<< TransactionPool.cpp << " << "tx used wrong inputs, rejected";
+        logger(INFO, RED) << "- TransactionPool.cpp - " << "tx used wrong inputs, rejected";
         tvc.m_verification_failed = true;
         return false;
       }
@@ -178,7 +178,7 @@ namespace CryptoNote {
     if (!keptByBlock) {
       bool sizeValid = m_validator.checkTransactionSize(blobSize);
       if (!sizeValid) {
-        logger(INFO) << "<< TransactionPool.cpp << " << "tx too big, rejected";
+        logger(INFO, RED) << "- TransactionPool.cpp - " << "tx too big, rejected";
         tvc.m_verification_failed = true;
         return false;
       }
@@ -187,7 +187,7 @@ namespace CryptoNote {
     std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
 
     if (!keptByBlock && m_recentlyDeletedTransactions.find(id) != m_recentlyDeletedTransactions.end()) {
-      logger(INFO) << "<< TransactionPool.cpp << " << "Trying to add recently deleted transaction. Ignore: " << id;
+      logger(INFO, YELLOW) << "- TransactionPool.cpp - " << "Trying to add recently deleted transaction. Ignore: " << id;
       tvc.m_verification_failed = false;
       tvc.m_should_be_relayed = false;
       tvc.m_added_to_pool = false;
@@ -449,14 +449,14 @@ namespace CryptoNote {
   //---------------------------------------------------------------------------------
   bool tx_memory_pool::deinit() {
     if (!Tools::create_directories_if_necessary(m_config_folder)) {
-      logger(INFO) << "<< TransactionPool.cpp << " << "Failed to create data directory: " << m_config_folder;
+      logger(INFO, RED) << "- TransactionPool.cpp - " << "Failed to create data directory: " << m_config_folder;
       return false;
     }
 
     std::string state_file_path = m_config_folder + "/" + m_currency.txPoolFileName();
 
     if (!storeToBinaryFile(*this, state_file_path)) {
-      logger(INFO) << "<< TransactionPool.cpp << " << "Failed to serialize memory pool to file " << state_file_path;
+      logger(INFO, RED) << "- TransactionPool.cpp - " << "Failed to serialize memory pool to file " << state_file_path;
     }
 
     m_paymentIdIndex.clear();

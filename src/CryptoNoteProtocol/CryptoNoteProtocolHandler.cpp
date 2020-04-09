@@ -146,7 +146,7 @@ void CryptoNoteProtocolHandler::log_connections()
        << std::setw(25) << get_protocol_state_string(cntxt.m_state)
        << std::setw(20) << std::to_string(time(NULL) - cntxt.m_started) << ENDL;
   });
-  logger(INFO) << "Connections: " << ENDL << ss.str();
+  logger(INFO, GREEN) << "Connections: " << ENDL << ss.str();
 }
 
 /* Get a list of daemons connected to this node */

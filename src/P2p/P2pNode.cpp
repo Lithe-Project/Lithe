@@ -193,7 +193,7 @@ void P2pNode::acceptLoop() {
       auto connection = m_listener.accept();
       auto ctx = new P2pContext(m_dispatcher, std::move(connection), true, 
         getRemoteAddress(connection), m_cfg.getTimedSyncInterval(), getGenesisPayload());
-      logger(INFO) << "Incoming connection from " << ctx->getRemoteAddress();
+      logger(INFO, GREEN) << "Incoming connection from " << ctx->getRemoteAddress();
       workingContextGroup.spawn([this, ctx] {
         preprocessIncomingConnection(ContextPtr(ctx));
       });
@@ -408,7 +408,7 @@ bool P2pNode::fetchPeerList(ContextPtr connection) {
 
     return handleRemotePeerList(response.local_peerlist, response.node_data.local_time);
   } catch (std::exception& e) {
-    logger(INFO) << *connection << "Failed to obtain peer list: " << e.what();
+    logger(INFO, YELLOW) << *connection << "Failed to obtain peer list: " << e.what();
   }
 
   return false;

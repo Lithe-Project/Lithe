@@ -430,7 +430,7 @@ bool Currency::getTransactionFee(const Transaction& tx, uint64_t& fee, uint32_t 
     // interest shows up in the output of the W/D transactions and W/Ds always have min fee
     if (tx.inputs.size() > 0 && tx.outputs.size() > 0 && amount_out > amount_in + parameters::MINIMUM_FEE) {
       fee = parameters::MINIMUM_FEE;
-      logger(INFO) << "TRIGGERED: Currency.cpp getTransactionFee";
+      logger(INFO, YELLOW) << "TRIGGERED: Currency.cpp getTransactionFee";
     } else {
       return false;
     }
@@ -486,7 +486,7 @@ bool Currency::constructMinerTx(uint32_t height, size_t medianSize, uint64_t alr
   uint64_t blockReward;
   int64_t emissionChange;
   if (!getBlockReward(medianSize, currentBlockSize, alreadyGeneratedCoins, fee, height, blockReward, emissionChange)) {
-    logger(INFO) << "Block is too big";
+    logger(INFO, RED) << "Block is too big";
     return false;
   }
 

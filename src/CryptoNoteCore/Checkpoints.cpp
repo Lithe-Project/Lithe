@@ -124,15 +124,15 @@ bool Checkpoints::load_checkpoints_from_dns()
     char c;
     if (del == std::string::npos) continue;
     if ((ss.fail() || ss.get(c)) || !Common::podFromHex(hash_str, hash)) {
-      logger(Logging::INFO) << "<< Checkpoints.cpp << " << "Failed to parse DNS checkpoint record: " << record;
+      logger(Logging::INFO, RED) << "- Checkpoints.cpp - " << "Failed to parse DNS checkpoint record: " << record;
       continue;
     }
 
     if (!(0 == m_points.count(height))) {
-      logger(DEBUGGING) << "<< Checkpoints.cpp << " << "Checkpoint already exists for height: " << height << ". Ignoring DNS checkpoint.";
+      logger(DEBUGGING) << "- Checkpoints.cpp - " << "Checkpoint already exists for height: " << height << ". Ignoring DNS checkpoint.";
     } else {
       add_checkpoint(height, hash_str);
-	    logger(INFO) << "<< Checkpoints.cpp << " << "Added DNS checkpoint: " << height_str << ":" << hash_str;
+	    logger(INFO, GREEN) << "- Checkpoints.cpp - " << "Added DNS checkpoint: " << height_str << ":" << hash_str;
     }
   }
 
