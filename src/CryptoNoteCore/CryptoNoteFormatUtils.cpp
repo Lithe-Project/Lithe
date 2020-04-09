@@ -488,9 +488,9 @@ bool get_block_longhash(cn_context &context, const Block& b, Hash& res) {
     return false;
   }
 
-if (b.majorVersion >= 7) {
+if (b.majorVersion >= 3) {
     cn_conceal_slow_hash_v0(context, bd.data(), bd.size(), res);
-  } else if (b.majorVersion >= 3) {
+  } else if (b.majorVersion == 2) {
     cn_fast_slow_hash_v1(context, bd.data(), bd.size(), res);
   } else {
     cn_slow_hash(context, bd.data(), bd.size(), res);

@@ -514,7 +514,7 @@ void WalletSerializer::loadWallet(Common::IInputStream& source, const std::strin
     loadTransfers(source, cryptoContext, version);
   }
 
-  if (version < 5) {
+  if (version < 3) {
     updateTransfersSign();
     cache = false;
   }
@@ -522,20 +522,20 @@ void WalletSerializer::loadWallet(Common::IInputStream& source, const std::strin
   if (cache) {
     loadBalances(source, cryptoContext);
     loadTransfersSynchronizer(source, cryptoContext);
-    if (version < 5) {
+    if (version < 3) {
       loadObsoleteSpentOutputs(source, cryptoContext);
     }
 
     loadUnlockTransactionsJobs(source, cryptoContext);
 
-    if (version < 5) {
+    if (version < 3) {
       loadObsoleteChange(source, cryptoContext);
     }
 
-    if (version > 3) {
+    if (version >= 3) {
       loadUncommitedTransactions(source, cryptoContext);
 
-      if (version >= 5) {
+      if (version >= 3) {
         initTransactionPool();
       }
     }

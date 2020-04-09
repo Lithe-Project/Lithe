@@ -28,10 +28,6 @@ const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V1 = 11; /* changed for LWMA3 *
 
 const uint64_t MONEY_SUPPLY = UINT64_C(100000000000000); /* max supply: 1B (Consensus II) */
 
-const uint32_t ZAWY_DIFFICULTY_BLOCK_INDEX = 0;
-const size_t   ZAWY_DIFFICULTY_FIX = 1;
-const uint8_t  ZAWY_DIFFICULTY_BLOCK_VERSION = 0;
-
 const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW = 100;
 const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE = 100000; /* size of block in bytes, after which reward is calculated using block size */
 const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE = 600;
@@ -100,6 +96,7 @@ const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO = 4;
 const uint64_t UPGRADE_HEIGHT = 1;
 const uint64_t UPGRADE_HEIGHT_V2 = 1;
 const uint64_t UPGRADE_HEIGHT_V3 = 2;
+
 const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent
 const size_t   UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; 
 const size_t   UPGRADE_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; 
@@ -107,18 +104,17 @@ const size_t   UPGRADE_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 static_assert(0 < UPGRADE_VOTING_THRESHOLD && UPGRADE_VOTING_THRESHOLD <= 100, "Bad UPGRADE_VOTING_THRESHOLD");
 static_assert(UPGRADE_VOTING_WINDOW > 1, "Bad UPGRADE_VOTING_WINDOW");
 
-const char     CRYPTONOTE_BLOCKS_FILENAME[] = "blocks.dat";
-const char     CRYPTONOTE_BLOCKINDEXES_FILENAME[] = "blockindexes.dat";
-const char     CRYPTONOTE_BLOCKSCACHE_FILENAME[] = "blockscache.dat";
-const char     CRYPTONOTE_POOLDATA_FILENAME[] = "poolstate.bin";
-const char     P2P_NET_DATA_FILENAME[] = "p2pstate.bin";
-const char     CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[]       = "blockchainindices.dat";
-const char     MINER_CONFIG_FILE_NAME[]                       = "miner_conf.json";
+const char     CRYPTONOTE_BLOCKS_FILENAME[]               = "blocks.dat";
+const char     CRYPTONOTE_BLOCKINDEXES_FILENAME[]         = "blockindexes.dat";
+const char     CRYPTONOTE_BLOCKSCACHE_FILENAME[]          = "blockscache.dat";
+const char     CRYPTONOTE_POOLDATA_FILENAME[]             = "poolstate.bin";
+const char     P2P_NET_DATA_FILENAME[]                    = "p2pstate.bin";
+const char     CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[]   = "blockchainindices.dat";
+const char     MINER_CONFIG_FILE_NAME[]                   = "miner_conf.json";
 
 } // parameters
 
 const uint64_t START_BLOCK_REWARD = (UINT64_C(5000) * parameters::POINT); // start reward (Consensus I)
-const uint64_t FOUNDATION_TRUST = (UINT64_C(12000000) * parameters::COIN); // locked funds to secure network  (Consensus II)
 const uint64_t MAX_BLOCK_REWARD = (UINT64_C(20) * parameters::COIN); // max reward (Consensus I)
 const uint64_t REWARD_INCREASE_INTERVAL = (UINT64_C(21900)); // aprox. 1 month (+ 0.25 CCX increment per month)
 
@@ -129,9 +125,11 @@ const uint64_t GENESIS_TIMESTAMP = 1527078920;
 
 const uint8_t  TRANSACTION_VERSION_1 = 1;
 const uint8_t  TRANSACTION_VERSION_2 = 2;
+
 const uint8_t  BLOCK_MAJOR_VERSION_1 = 1; // (Consensus I)
 const uint8_t  BLOCK_MAJOR_VERSION_2 = 2; // (Consensus II)
 const uint8_t  BLOCK_MAJOR_VERSION_3 = 3; // (Consensus III)
+
 const uint8_t  BLOCK_MINOR_VERSION_0 = 0;
 const uint8_t  BLOCK_MINOR_VERSION_1 = 1;
 
@@ -141,7 +139,6 @@ const size_t   COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT = 1000;
 
 const int      P2P_DEFAULT_PORT = 29999;
 const int      RPC_DEFAULT_PORT = 30000;
-
 
 /* P2P Network Configuration Section - This defines our current P2P network version
 and the minimum version for communication between nodes */

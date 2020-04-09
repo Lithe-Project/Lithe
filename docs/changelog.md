@@ -10,3 +10,6 @@
 - Added clarifying colours to the core daemon.
 - Added file names to daemon info, errors and warnings so we can track easier.
 - Removed hardforks after `MAJOR_BLOCK_VERSION_3`
+- Fixed some more forks.
+- Removed Zawys old difficulty algorithm.
+- Removed premine code.
