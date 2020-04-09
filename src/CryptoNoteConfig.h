@@ -99,11 +99,7 @@ const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO = 4;
 
 const uint64_t UPGRADE_HEIGHT = 1;
 const uint64_t UPGRADE_HEIGHT_V2 = 1;
-const uint64_t UPGRADE_HEIGHT_V3 = 12750; /* Cryptonight-Fast */
-const uint64_t UPGRADE_HEIGHT_V4 = 45000; /* MixIn 2 */
-const uint64_t UPGRADE_HEIGHT_V5 = 98160; /* Deposits 2.0, Investments 1.0 */
-const uint64_t UPGRADE_HEIGHT_V6 = 104200; /* LWMA3 */
-const uint64_t UPGRADE_HEIGHT_V7 = 195765; /* Cryptoight Conceal */
+const uint64_t UPGRADE_HEIGHT_V3 = 2;
 const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent
 const size_t   UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; 
 const size_t   UPGRADE_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; 
@@ -136,8 +132,6 @@ const uint8_t  TRANSACTION_VERSION_2 = 2;
 const uint8_t  BLOCK_MAJOR_VERSION_1 = 1; // (Consensus I)
 const uint8_t  BLOCK_MAJOR_VERSION_2 = 2; // (Consensus II)
 const uint8_t  BLOCK_MAJOR_VERSION_3 = 3; // (Consensus III)
-const uint8_t  BLOCK_MAJOR_VERSION_4 = 4; // LWMA3
-const uint8_t  BLOCK_MAJOR_VERSION_7 = 7; /* Cryptonight Conceal */
 const uint8_t  BLOCK_MINOR_VERSION_0 = 0;
 const uint8_t  BLOCK_MINOR_VERSION_1 = 1;
 

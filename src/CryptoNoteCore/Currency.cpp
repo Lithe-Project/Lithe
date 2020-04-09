@@ -127,7 +127,7 @@ bool Currency::generateGenesisBlock() {
 /* ---------------------------------------------------------------------------------------------------- */
 
 size_t Currency::difficultyWindowByBlockVersion(uint8_t blockMajorVersion) const {
-  if (blockMajorVersion >= BLOCK_MAJOR_VERSION_4) {
+  if (blockMajorVersion >= BLOCK_MAJOR_VERSION_3) {
     return parameters::DIFFICULTY_WINDOW_V3;
   } else if (blockMajorVersion >= BLOCK_MAJOR_VERSION_2) {
     return m_difficultyWindow;
@@ -173,10 +173,6 @@ uint32_t Currency::upgradeHeight(uint8_t majorVersion) const {
     return m_upgradeHeightV2;
   } else if (majorVersion == BLOCK_MAJOR_VERSION_3) {
     return m_upgradeHeightV3;
-  } else if (majorVersion == BLOCK_MAJOR_VERSION_4) {
-    return m_upgradeHeightV6;
-  } else if (majorVersion == BLOCK_MAJOR_VERSION_7) {
-    return m_upgradeHeightV7;
   } else {
     return static_cast<uint32_t>(-1);
   }
@@ -616,7 +612,7 @@ bool Currency::isFusionTransaction(const Transaction& transaction) const {
 			return false;
 		}
 
-		if (height < CryptoNote::parameters::UPGRADE_HEIGHT_V4 && amount < defaultDustThreshold()) {
+		if (height < CryptoNote::parameters::UPGRADE_HEIGHT_V3 && amount < defaultDustThreshold()) {
 			return false;
 		}
 
@@ -1071,8 +1067,6 @@ CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
 
   upgradeHeightV2(parameters::UPGRADE_HEIGHT_V2);
   upgradeHeightV3(parameters::UPGRADE_HEIGHT_V3);
-  upgradeHeightV6(parameters::UPGRADE_HEIGHT_V6);
-  upgradeHeightV7(parameters::UPGRADE_HEIGHT_V7);  
   upgradeVotingThreshold(parameters::UPGRADE_VOTING_THRESHOLD);
   upgradeVotingWindow(parameters::UPGRADE_VOTING_WINDOW);
   upgradeWindow(parameters::UPGRADE_WINDOW);

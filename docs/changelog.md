@@ -9,3 +9,4 @@
 - In `external/`, gtest has been disabled unless testing.
 - Added clarifying colours to the core daemon.
 - Added file names to daemon info, errors and warnings so we can track easier.
+- Removed hardforks after `MAJOR_BLOCK_VERSION_3`
