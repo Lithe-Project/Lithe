@@ -124,6 +124,7 @@ public:
   const std::string& txPoolFileName() const { return m_txPoolFileName; }
   const std::string& blockchinIndicesFileName() const { return m_blockchinIndicesFileName; }
 
+  bool isBlockexplorer() const { return m_isBlockexplorer; }
   bool isTestnet() const { return m_testnet; }
 
   const Block& genesisBlock() const { return m_genesisBlock; }
@@ -248,6 +249,7 @@ private:
   static const std::vector<uint64_t> REWARD_INCREASING_FACTOR;
 
   bool m_testnet;
+  bool m_isBlockexplorer;
   std::string m_genesisCoinbaseTxHex;
 
   Block m_genesisBlock;
@@ -340,6 +342,7 @@ public:
   CurrencyBuilder& blockchinIndicesFileName(const std::string& val) { m_currency.m_blockchinIndicesFileName = val; return *this; }
 
   CurrencyBuilder& genesisCoinbaseTxHex(const std::string& val) { m_currency.m_genesisCoinbaseTxHex = val; return *this; }
+  CurrencyBuilder& isBlockexplorer(const bool val) { m_currency.m_isBlockexplorer = val; return *this; }
   CurrencyBuilder& testnet(bool val) { m_currency.m_testnet = val; return *this; }
 
 private:

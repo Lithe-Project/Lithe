@@ -13,3 +13,4 @@
 - Fixed some more forks.
 - Removed Zawys old difficulty algorithm.
 - Removed premine code.
+- Minor upgrades to `lithe-wallet`.

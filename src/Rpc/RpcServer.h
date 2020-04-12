@@ -28,7 +28,8 @@ public:
   bool restrictRPC(const bool is_resctricted);
   bool k_on_check_tx_proof(const K_COMMAND_RPC_CHECK_TX_PROOF::request& req, K_COMMAND_RPC_CHECK_TX_PROOF::response& res);
   bool k_on_check_reserve_proof(const K_COMMAND_RPC_CHECK_RESERVE_PROOF::request& req, K_COMMAND_RPC_CHECK_RESERVE_PROOF::response& res);  
-  bool enableCors(const std::string domain);  
+  bool enableCors(const std::vector<std::string> domains);
+  std::vector<std::string> getCorsDomains();
   bool remotenode_check_incoming_tx(const BinaryArray& tx_blob);
 
 private:
@@ -89,7 +90,7 @@ private:
   NodeServer& m_p2p;
   const ICryptoNoteProtocolQuery& m_protocolQuery;
   bool m_restricted_rpc;
-  std::string m_cors_domain;
+  std::vector<std::string> m_cors_domains;
   std::string m_fee_address;
   Crypto::SecretKey m_view_key = NULL_SECRET_KEY;
   AccountPublicAddress m_fee_acc; 

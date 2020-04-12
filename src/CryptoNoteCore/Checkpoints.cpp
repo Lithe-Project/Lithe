@@ -104,7 +104,7 @@ std::vector<uint32_t> Checkpoints::getCheckpointHeights() const {
 
 bool Checkpoints::load_checkpoints_from_dns()
 {
-  std::string domain("checkpoints.conceal.id");
+  std::string domain("*");
   std::vector<std::string>records;
 
   logger(Logging::DEBUGGING) << "<< Checkpoints.cpp << " << "Fetching DNS checkpoint records from " << domain;
