@@ -81,8 +81,10 @@ bool Currency::init() {
   }
 
   if (isTestnet()) {
+    /* @NOTE: We can keep m_upgradeHeightV2 = 0 as generateGenesisBlock will always be created
+     *        created using BLOCK_MAJOR_VERSION_1 */
     m_upgradeHeightV2 = 0;
-	  m_upgradeHeightV3 = static_cast<uint32_t>(-1);
+    m_upgradeHeightV3 = 2;
     m_blocksFileName = "testnet_" + m_blocksFileName;
     m_blocksCacheFileName = "testnet_" + m_blocksCacheFileName;
     m_blockIndexesFileName = "testnet_" + m_blockIndexesFileName;
