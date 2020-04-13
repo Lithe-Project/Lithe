@@ -14,3 +14,7 @@
 - Removed Zawys old difficulty algorithm.
 - Removed premine code.
 - Minor upgrades to `lithe-wallet`.
+- Added args `--enable-cors` + `--enable-blockexplorer` to `lithe-daemon`.
+- Added new command within `lithe-daemon`. `status` will now show blockchain information **(WIP)**.
+- Fixed Testnet as previous declaration didn't fork past `major_version: 2`.
+  - **@NOTE:** This could be a fix for *all* other CryptoNote based coins. 
