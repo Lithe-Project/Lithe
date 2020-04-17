@@ -51,7 +51,7 @@ namespace {
   const command_line::arg_descriptor<std::string> arg_pass      = {"walletd-password", "RPC password. Default: none", "", true};
   const command_line::arg_descriptor<uint16_t>    arg_interval  = {"interval", "polling interval in seconds. Default: 5. Minimum: 1. Maximum: 120.", 5, true};
   const command_line::arg_descriptor<uint16_t>    arg_duration  = {"duration", "maximum execution time, in minutes. Default: 0 (unlimited)", 0, true};
-  const command_line::arg_descriptor<uint64_t>    arg_threshold = {"threshold", "Only outputs lesser than the threshold value will be included into optimization. Default: 100 (0.000100 CCX)", DEFAULT_THRESHOLD, true};
+  const command_line::arg_descriptor<uint64_t>    arg_threshold = {"threshold", "Only outputs lesser than the threshold value will be included into optimization. Default: 0.00100 $LXTH", DEFAULT_THRESHOLD, true};
   const command_line::arg_descriptor<uint16_t>    arg_anonimity = {"anonymity", "Privacy level. Higher values give more privacy but bigger transactions. Default: 0", 0, true};
   const command_line::arg_descriptor<bool>        arg_preview   = {"preview", "print on screen what it would be doing, but not really doing it", false, true};
   Logging::ConsoleLogger log;

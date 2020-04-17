@@ -1,6 +1,8 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2019-2020 The Lithe Project Development Team
+//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -271,7 +273,7 @@ bool core::check_tx_semantic(const Transaction& tx, bool keeped_by_block, uint32
 
   if (amount_in < amount_out){
 	  //correct check for unknown deposit creation height
-	  uint32_t testHeight = height > parameters::END_MULTIPLIER_BLOCK ? 0 : (uint32_t)(-1); //try other mode
+	  uint32_t testHeight = height; //try other mode
 	  amount_in = m_currency.getTransactionAllInputsAmount(tx, testHeight);
 	  if (amount_in < amount_out) {
 		logger(ERROR) << "<< Core.cpp << " << "tx with wrong amounts: ins " << amount_in << ", outs " << amount_out << ", rejected for tx id= " << getObjectHash(tx);

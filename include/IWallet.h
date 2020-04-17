@@ -102,7 +102,7 @@ struct TransactionParameters {
   std::vector<std::string> sourceAddresses;
   std::vector<WalletOrder> destinations;
   std::vector<WalletMessage> messages;
-  uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+  uint64_t fee = CryptoNote::parameters::MINIMUM_FEE;
   uint64_t mixIn = CryptoNote::parameters::MINIMUM_MIXIN;
   std::string extra;
   uint64_t unlockTimestamp = 0;

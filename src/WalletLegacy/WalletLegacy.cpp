@@ -94,7 +94,7 @@ uint64_t calculateDepositsAmount(const std::vector<CryptoNote::TransactionOutput
   return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights] (uint64_t sum, const CryptoNote::TransactionOutputInformation& deposit) {
     if (deposit.term % 64800 != 0) 
     {
-      return sum + deposit.amount + currency.calculateInterest(deposit.amount, deposit.term, heights[index++]);
+      return sum + deposit.amount + currency.calculateInterestMaths(deposit.amount, deposit.term, heights[index++]);
     }
     else
     {
@@ -109,7 +109,7 @@ uint64_t calculateInvestmentsAmount(const std::vector<CryptoNote::TransactionOut
   return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights] (uint64_t sum, const CryptoNote::TransactionOutputInformation& deposit) {
     if (deposit.term % 64800 == 0) 
     {
-      return sum + deposit.amount + currency.calculateInterest(deposit.amount, deposit.term, heights[index++]);
+      return sum + deposit.amount + currency.calculateInterestMaths(deposit.amount, deposit.term, heights[index++]);
     }
     else
     {
@@ -569,7 +569,7 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
      is larger than 0 */
   if (ttl == 0) 
   {
-    fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+    fee = CryptoNote::parameters::MINIMUM_FEE;
   }
 
   /* This is the logic that determins if it is an optimization transaction */
@@ -581,7 +581,7 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
     transfer.amount = 0;
     transfers.push_back(transfer);
     optimize = true;
-    fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+    fee = CryptoNote::parameters::MINIMUM_FEE;
   }
 
   TransactionId txId = 0;
@@ -699,7 +699,7 @@ TransactionId WalletLegacy::sendFusionTransaction(const std::list<TransactionOut
   destination.amount = 0;
 
   /* For transaction pool differentiation, fusion and optimization should be 50 X */
-  fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+  fee = CryptoNote::parameters::MINIMUM_FEE;
   
   for (auto& out : fusionInputs) {
     destination.amount += out.amount;
@@ -729,7 +729,7 @@ TransactionId WalletLegacy::deposit(uint32_t term, uint64_t amount, uint64_t fee
   std::unique_ptr<WalletRequest> request;
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
 
-  fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+  fee = CryptoNote::parameters::MINIMUM_FEE;
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
@@ -757,7 +757,7 @@ TransactionId WalletLegacy::withdrawDeposits(const std::vector<DepositId>& depos
   std::unique_ptr<WalletRequest> request;
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
 
-  fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+  fee = CryptoNote::parameters::MINIMUM_FEE;
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);

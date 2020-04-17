@@ -1,6 +1,8 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2019-2020 The Lithe Project Development Team
+//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -64,7 +66,6 @@ public:
   uint64_t coin() const { return m_coin; }
 
   uint64_t minimumFee() const { return m_minimumFee; }
-  uint64_t minimumFeeV1() const { return m_minimumFeeV1; }
   uint64_t minimumFeeBanking() const { return m_minimumFeeBanking; }
 
   uint64_t defaultDustThreshold() const { return m_defaultDustThreshold; }
@@ -90,7 +91,6 @@ public:
   uint64_t depositMinAmount() const { return m_depositMinAmount; }
   uint32_t depositMinTerm() const { return m_depositMinTerm; }
   uint32_t depositMaxTerm() const { return m_depositMaxTerm; }
-  uint32_t depositMaxTermV1() const { return m_depositMaxTermV1; }
   uint64_t depositMinTotalRateFactor() const { return m_depositMinTotalRateFactor; }
   uint64_t depositMaxTotalRate() const { return m_depositMaxTotalRate; }
 
@@ -132,9 +132,8 @@ public:
 
   bool getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint32_t height,
   uint64_t& reward, int64_t& emissionChange) const;
-  uint64_t calculateInterest(uint64_t amount, uint32_t term, uint32_t height) const;
-  uint64_t calculateInterestV2(uint64_t amount, uint32_t term) const;
-  uint64_t calculateInterestV3(uint64_t amount, uint32_t term) const;  
+  uint64_t calculateInterestMaths(uint64_t amount, uint32_t term, uint32_t height) const;
+  uint64_t calculateInterest(uint64_t amount, uint32_t term) const;  
   uint64_t calculateTotalTransactionInterest(const Transaction& tx, uint32_t height) const;
   uint64_t getTransactionInputAmount(const TransactionInput& in, uint32_t height) const;
   uint64_t getTransactionAllInputsAmount(const Transaction& tx, uint32_t height) const;
@@ -201,7 +200,6 @@ private:
   uint64_t m_coin;
 
   uint64_t m_minimumFee;
-  uint64_t m_minimumFeeV1;
   uint64_t m_minimumFeeBanking;    
   uint64_t m_defaultDustThreshold;
 
@@ -213,7 +211,6 @@ private:
   uint64_t m_depositMinAmount;
   uint32_t m_depositMinTerm;
   uint32_t m_depositMaxTerm;
-  uint32_t m_depositMaxTermV1;
   uint64_t m_depositMinTotalRateFactor;
   uint64_t m_depositMaxTotalRate;
 
@@ -296,7 +293,6 @@ public:
   CurrencyBuilder& numberOfDecimalPlaces(size_t val);
 
   CurrencyBuilder& minimumFee(uint64_t val) { m_currency.m_minimumFee = val; return *this; }
-  CurrencyBuilder& minimumFeeV1(uint64_t val) { m_currency.m_minimumFeeV1 = val; return *this; }
   CurrencyBuilder& minimumFeeBanking(uint64_t val) { m_currency.m_minimumFeeBanking = val; return *this; }
 
   CurrencyBuilder& defaultDustThreshold(uint64_t val) { m_currency.m_defaultDustThreshold = val; return *this; }
@@ -309,7 +305,6 @@ public:
   CurrencyBuilder& depositMinAmount(uint64_t val) { m_currency.m_depositMinAmount = val; return *this; }
   CurrencyBuilder& depositMinTerm(uint32_t val) { m_currency.m_depositMinTerm = val; return *this; }
   CurrencyBuilder& depositMaxTerm(uint32_t val) { m_currency.m_depositMaxTerm = val; return *this; }
-  CurrencyBuilder& depositMaxTermV1(uint32_t val) { m_currency.m_depositMaxTermV1 = val; return *this; }
   CurrencyBuilder& depositMinTotalRateFactor(uint64_t val) { m_currency.m_depositMinTotalRateFactor = val; return *this; }
   CurrencyBuilder& depositMaxTotalRate(uint64_t val) { m_currency.m_depositMaxTotalRate = val; return *this; }
 

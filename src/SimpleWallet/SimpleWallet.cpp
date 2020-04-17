@@ -1,6 +1,8 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2019-2020 The Lithe Project Development Team
+
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -469,8 +471,8 @@ bool processServerAliasResponse(const std::string& s, std::string& address) {
   try {
   //   
   // Courtesy of Monero Project
-		// make sure the txt record has "oa1:ccx" and find it
-		auto pos = s.find("oa1:ccx");
+		// make sure the txt record has "oa1:lxth" and find it
+		auto pos = s.find("oa1:lxth");
 		if (pos == std::string::npos)
 			return false;
 		// search from there to find "recipient_address="
@@ -995,7 +997,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
     std::string secretKeysData = std::string(reinterpret_cast<char*>(&keys.spendSecretKey), sizeof(keys.spendSecretKey)) + std::string(reinterpret_cast<char*>(&keys.viewSecretKey), sizeof(keys.viewSecretKey));
     std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
 
-    logger(INFO, BRIGHT_GREEN) << "ConcealWallet is an open-source, client-side, free wallet which allow you to send and receive CCX instantly on the blockchain. You are  in control of your funds & your keys. When you generate a new wallet, login, send, receive or deposit $CCX everything happens locally. Your seed is never transmitted, received or stored. That's why its imperative to write, print or save your seed somewhere safe. The backup of keys is your responsibility. If you lose your seed, your account can not be recovered. The Conceal Team doesn't take any responsibility for lost funds due to nonexistent/missing/lost private keys." << std::endl << std::endl;
+    logger(INFO, BRIGHT_GREEN) << "ConcealWallet is an open-source, client-side, free wallet which allow you to send and receive $LXTH instantly on the blockchain. You are  in control of your funds & your keys. When you generate a new wallet, login, send, receive or deposit $LXTH everything happens locally. Your seed is never transmitted, received or stored. That's why its imperative to write, print or save your seed somewhere safe. The backup of keys is your responsibility. If you lose your seed, your account can not be recovered. The Conceal Team doesn't take any responsibility for lost funds due to nonexistent/missing/lost private keys." << std::endl << std::endl;
 
     logger(INFO, BRIGHT_WHITE) <<
       "Wallet Address: " << m_wallet->getAddress() << std::endl <<
@@ -1213,7 +1215,7 @@ bool simple_wallet::get_reserve_proof(const std::vector<std::string> &args)
 		
 		//logger(INFO, BRIGHT_WHITE) << "\n\n" << sig_str << "\n\n" << std::endl;
 
-		const std::string filename = "reserve_proof_" + args[0] + "_CCX.txt";
+		const std::string filename = "reserve_proof_" + args[0] + "_lxth.txt";
 		boost::system::error_code ec;
 		if (boost::filesystem::exists(filename, ec)) {
 			boost::filesystem::remove(filename, ec);
@@ -1469,7 +1471,7 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
   std::string secretKeysData = std::string(reinterpret_cast<char*>(&keys.spendSecretKey), sizeof(keys.spendSecretKey)) + std::string(reinterpret_cast<char*>(&keys.viewSecretKey), sizeof(keys.viewSecretKey));
   std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
 
-  logger(INFO, BRIGHT_GREEN) << std::endl << "ConcealWallet is an open-source, client-side, free wallet which allow you to send and receive CCX instantly on the blockchain. You are  in control of your funds & your keys. When you generate a new wallet, login, send, receive or deposit $CCX everything happens locally. Your seed is never transmitted, received or stored. That's why its imperative to write, print or save your seed somewhere safe. The backup of keys is your responsibility. If you lose your seed, your account can not be recovered. The Conceal Team doesn't take any responsibility for lost funds due to nonexistent/missing/lost private keys." << std::endl << std::endl;
+  logger(INFO, BRIGHT_GREEN) << std::endl << "ConcealWallet is an open-source, client-side, free wallet which allow you to send and receive $LXTH instantly on the blockchain. You are  in control of your funds & your keys. When you generate a new wallet, login, send, receive or deposit $LXTH everything happens locally. Your seed is never transmitted, received or stored. That's why its imperative to write, print or save your seed somewhere safe. The backup of keys is your responsibility. If you lose your seed, your account can not be recovered. The Conceal Team doesn't take any responsibility for lost funds due to nonexistent/missing/lost private keys." << std::endl << std::endl;
 
   std::cout << "Private spend key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
   std::cout << "Private view key: " <<  Common::podToHex(keys.viewSecretKey) << std::endl;
@@ -1653,7 +1655,7 @@ bool simple_wallet::optimize_outputs(const std::vector<std::string>& args) {
     std::vector<CryptoNote::WalletLegacyTransfer> transfers;
     std::vector<CryptoNote::TransactionMessage> messages;
     std::string extraString;
-    uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+    uint64_t fee = CryptoNote::parameters::MINIMUM_FEE;
     uint64_t mixIn = 0;
     uint64_t unlockTimestamp = 0;
     uint64_t ttl = 0;
@@ -1721,7 +1723,7 @@ bool simple_wallet::optimize_all_outputs(const std::vector<std::string>& args) {
       std::vector<CryptoNote::WalletLegacyTransfer> transfers;
       std::vector<CryptoNote::TransactionMessage> messages;
       std::string extraString;
-      uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+      uint64_t fee = CryptoNote::parameters::MINIMUM_FEE;
       uint64_t mixIn = 0;
       uint64_t unlockTimestamp = 0;
       uint64_t ttl = 0;
@@ -1873,8 +1875,8 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
     cmd.fake_outs_count = CryptoNote::parameters::MINIMUM_MIXIN;
 
     /* force minimum fee */
-    if (cmd.fee < CryptoNote::parameters::MINIMUM_FEE_V2) {
-      cmd.fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+    if (cmd.fee < CryptoNote::parameters::MINIMUM_FEE) {
+      cmd.fee = CryptoNote::parameters::MINIMUM_FEE;
     }
 
     Crypto::SecretKey transactionSK;

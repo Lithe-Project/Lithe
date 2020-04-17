@@ -1,6 +1,8 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2019-2020 The Lithe Project Development Team
+//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -81,8 +83,10 @@ bool Currency::init() {
   }
 
   if (isTestnet()) {
+    /* @NOTE: We can keep m_upgradeHeightV2 = 0 as generateGenesisBlock will always be created
+     *        created using BLOCK_MAJOR_VERSION_1 */
     m_upgradeHeightV2 = 0;
-	  m_upgradeHeightV3 = static_cast<uint32_t>(-1);
+    m_upgradeHeightV3 = 2;
     m_blocksFileName = "testnet_" + m_blocksFileName;
     m_blocksCacheFileName = "testnet_" + m_blocksCacheFileName;
     m_blockIndexesFileName = "testnet_" + m_blockIndexesFileName;
@@ -200,20 +204,11 @@ bool Currency::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t height) const {
+uint64_t Currency::calculateInterestMaths(uint64_t amount, uint32_t term, uint32_t height) const {
 
   /* deposits 3.0 and investments 1.0 */
-  if ((term % 21900 == 0) && (height > parameters::DEPOSIT_HEIGHT_V3)) {
-   return calculateInterestV3(amount, term);
-  }
-
-  /* deposits 2.0 and investments 1.0 */
-  if (term % 64800 == 0) {
-    return calculateInterestV2(amount, term);
-  }
-
-  if (term % 5040 == 0) {
-    return calculateInterestV2(amount, term);
+  if (term % 21900 == 0) {
+   return calculateInterest(amount, term);
   }
 
   uint64_t a = static_cast<uint64_t>(term) * m_depositMaxTotalRate - m_depositMinTotalRateFactor;
@@ -228,8 +223,8 @@ uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t he
   /* early deposit multiplier */
   uint64_t interestHi;
   uint64_t interestLo;
-  if (height <= CryptoNote::parameters::END_MULTIPLIER_BLOCK) {
-      interestLo = mul128(cLo, CryptoNote::parameters::MULTIPLIER_FACTOR, &interestHi);
+  if (height <= uint64_t(1)) {
+      interestLo = mul128(cLo, uint64_t(100), &interestHi);
       assert(interestHi == 0);
   } else {
       interestHi = cHi;
@@ -238,95 +233,7 @@ uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t he
   return interestLo;
 }
 
-/* ---------------------------------------------------------------------------------------------------- */
-
-uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const {
-
-  uint64_t returnVal = 0;
-
-  /* investments */
-  if (term % 64800 == 0) {    
-
-    /* minimum 50000 for investments */
-    uint64_t amount4Humans = amount / 1000000;
-    assert(amount4Humans >= 50000);
-
-    /* quantity tiers */
-    float qTier = 1;
-    if(amount4Humans > 110000 && amount4Humans < 180000)
-      qTier = static_cast<float>(1.01);
-      
-    if(amount4Humans >= 180000 && amount4Humans < 260000)
-      qTier = static_cast<float>(1.02);
-
-    if(amount4Humans >= 260000 && amount4Humans < 350000)
-      qTier = static_cast<float>(1.03);
-
-    if(amount4Humans >= 350000 && amount4Humans < 450000)
-      qTier = static_cast<float>(1.04);
-
-    if(amount4Humans >= 450000 && amount4Humans < 560000)
-      qTier = static_cast<float>(1.05);
-
-    if(amount4Humans >= 560000 && amount4Humans < 680000)
-      qTier = static_cast<float>(1.06);
-
-    if(amount4Humans >= 680000 && amount4Humans < 810000)
-      qTier = static_cast<float>(1.07);
-
-    if(amount4Humans >= 810000 && amount4Humans < 950000)
-      qTier = static_cast<float>(1.08);
-
-    if(amount4Humans >= 950000 && amount4Humans < 1100000)
-      qTier = static_cast<float>(1.09);
-
-    if(amount4Humans >= 1100000 && amount4Humans < 1260000)
-      qTier = static_cast<float>(1.1);
-
-    if(amount4Humans >= 1260000 && amount4Humans < 1430000)
-      qTier = static_cast<float>(1.11);
-
-    if(amount4Humans >= 1430000 && amount4Humans < 1610000)
-      qTier = static_cast<float>(1.12);
-
-    if(amount4Humans >= 1610000 && amount4Humans < 1800000)
-      qTier = static_cast<float>(1.13);
-
-    if(amount4Humans >= 1800000 && amount4Humans < 2000000)
-      qTier = static_cast<float>(1.14);
-
-    if(amount4Humans > 2000000)
-      qTier = static_cast<float>(1.15);
-
-    float mq = static_cast<float>(1.4473);
-    float termQuarters = term / 64800;
-    float m8 = 100.0*pow(1.0+(mq/100.0), termQuarters)-100.0;
-    float m5 = termQuarters * 0.5;
-    float m7 = m8 * (1 + (m5/100));
-    float rate = m7 * qTier;
-    float interest = amount * (rate/100);
-    returnVal = static_cast<uint64_t>(interest);
-    return returnVal;
-  } 
-
-  /* weekly deposits */
-  if (term % 5040 == 0) {    
-    uint64_t actualAmount = amount;
-    float weeks = term / 5040;
-    float baseInterest = static_cast<float>(0.0696);
-    float interestPerWeek = static_cast<float>(0.0002);
-    float interestRate = baseInterest + (weeks * interestPerWeek);
-    float interest = actualAmount * ((weeks * interestRate) / 100);
-    returnVal = static_cast<uint64_t>(interest);
-    return returnVal;
-  } 
-
-  return returnVal;
-
-} /* Currency::calculateInterestV2 */
-
-
-uint64_t Currency::calculateInterestV3(uint64_t amount, uint32_t term) const
+uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term) const
 {
 
   uint64_t returnVal = 0;
@@ -353,7 +260,7 @@ uint64_t Currency::calculateInterestV3(uint64_t amount, uint32_t term) const
   float interest = amount * eir;
   returnVal = static_cast<uint64_t>(interest);
   return returnVal;
-} /* Currency::calculateInterestV3 */
+} /* Currency::calculateInterest */
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -363,7 +270,7 @@ uint64_t Currency::calculateTotalTransactionInterest(const Transaction& tx, uint
     if (input.type() == typeid(MultisignatureInput)) {
       const MultisignatureInput& multisignatureInput = boost::get<MultisignatureInput>(input);
       if (multisignatureInput.term != 0) {
-        interest += calculateInterest(multisignatureInput.amount, multisignatureInput.term, height);
+        interest += calculateInterestMaths(multisignatureInput.amount, multisignatureInput.term, height);
       }
     }
   }
@@ -381,7 +288,7 @@ uint64_t Currency::getTransactionInputAmount(const TransactionInput& in, uint32_
     if (multisignatureInput.term == 0) {
       return multisignatureInput.amount;
     } else {
-      return multisignatureInput.amount + calculateInterest(multisignatureInput.amount, multisignatureInput.term, height);
+      return multisignatureInput.amount + calculateInterestMaths(multisignatureInput.amount, multisignatureInput.term, height);
     }
   } else if (in.type() == typeid(BaseInput)) {
     return 0;
@@ -895,7 +802,6 @@ CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
   numberOfDecimalPlaces(parameters::CRYPTONOTE_DISPLAY_DECIMAL_POINT);
 
   minimumFee(parameters::MINIMUM_FEE);
-  minimumFeeV1(parameters::MINIMUM_FEE_V1);
   minimumFeeBanking(parameters::MINIMUM_FEE_BANKING);  
   defaultDustThreshold(parameters::DEFAULT_DUST_THRESHOLD);
 
@@ -907,7 +813,6 @@ CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
   depositMinAmount(parameters::DEPOSIT_MIN_AMOUNT);
   depositMinTerm(parameters::DEPOSIT_MIN_TERM);
   depositMaxTerm(parameters::DEPOSIT_MAX_TERM);
-  depositMaxTermV1(parameters::DEPOSIT_MAX_TERM_V1);
   depositMinTotalRateFactor(parameters::DEPOSIT_MIN_TOTAL_RATE_FACTOR);
   depositMaxTotalRate(parameters::DEPOSIT_MAX_TOTAL_RATE);
 

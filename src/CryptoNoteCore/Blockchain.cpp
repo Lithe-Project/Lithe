@@ -2,6 +2,7 @@
 // Copyright (c) 2016-2019, The Karbo developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2019-2020 The Lithe Project Development Team
 
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -1778,7 +1779,7 @@ bool Blockchain::check_tx_outputs(const Transaction& tx) const {
       } else {
         const auto& multisignatureOutput = ::boost::get<MultisignatureOutput>(out.target);
         if (multisignatureOutput.term != 0) {
-          if (multisignatureOutput.term < m_currency.depositMinTerm() || multisignatureOutput.term > m_currency.depositMaxTermV1()) {
+          if (multisignatureOutput.term < m_currency.depositMinTerm() || multisignatureOutput.term > m_currency.depositMaxTerm()) {
             logger(INFO, BRIGHT_WHITE) << getObjectHash(tx) << " multisignature output has invalid term: " << multisignatureOutput.term;
             return false;
           } else if (out.amount < m_currency.depositMinAmount()) {
