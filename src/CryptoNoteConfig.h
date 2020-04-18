@@ -106,8 +106,8 @@ const char     MINER_CONFIG_FILE_NAME[]                   = "miner_conf.json";
 
 } // parameters
 
-const uint64_t START_BLOCK_REWARD = (UINT64_C(5000) * parameters::POINT); // start reward (Consensus I)
-const uint64_t MAX_BLOCK_REWARD = (UINT64_C(20) * parameters::COIN); // max reward (Consensus I)
+const uint64_t START_BLOCK_REWARD = (UINT64_C(5000) * parameters::POINT); // start reward
+const uint64_t MAX_BLOCK_REWARD = (UINT64_C(20) * parameters::COIN); // max reward
 const uint64_t REWARD_INCREASE_INTERVAL = (UINT64_C(21900)); // aprox. 1 month (+ 0.25 $LXTH increment per month)
 
 const char     CRYPTONOTE_NAME[] = "lithe-prealpha";

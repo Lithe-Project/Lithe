@@ -55,9 +55,6 @@ RpcServer::HandlerFunction binMethod(bool (RpcServer::*handler)(typename Command
     }
 
     bool result = (obj->*handler)(req, res);
-    for (const auto& cors_domain: obj->getCorsDomains()) {
-      response.addHeader("Access-Control-Allow-Origin", cors_domain);
-    }
     response.setBody(storeToBinaryKeyValue(res.data()));
     return result;
   };
@@ -75,9 +72,6 @@ RpcServer::HandlerFunction jsonMethod(bool (RpcServer::*handler)(typename Comman
     }
 
     bool result = (obj->*handler)(req, res);
-    for (const auto& cors_domain: obj->getCorsDomains()) {
-      response.addHeader("Access-Control-Allow-Origin", cors_domain);
-    }
     response.setBody(storeToJson(res.data()));
     return result;
   };
@@ -135,9 +129,6 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
 
   using namespace JsonRpc;
 
-  for (const auto& cors_domain: m_cors_domains) {
-    response.addHeader("Access-Control-Allow-Origin", cors_domain);
-  }
   response.addHeader("Content-Type", "application/json");
 
   JsonRpcRequest jsonRequest;

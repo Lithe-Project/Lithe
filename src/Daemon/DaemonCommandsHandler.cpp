@@ -85,6 +85,7 @@ bool DaemonCommandsHandler::exit(const std::vector<std::string>& args) {
 
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::help(const std::vector<std::string>& args) {
+  Common::Console::setTextColor(Common::Console::Color::BrightMagenta);
   std::cout << get_commands_str() << ENDL;
   return true;
 }

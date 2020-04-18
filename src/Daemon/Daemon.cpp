@@ -109,7 +109,7 @@ void print_genesis_tx_hex() {
  //	CryptoNote::BinaryArray txb = CryptoNote::toBinaryArray(tx);
  //	std::string tx_hex = Common::toHex(txb);
 
- //	std::cout << "Modify this line into your concealX configuration file as is:  " << std::endl;
+ //	std::cout << "Modify this line into your lithe configuration file as is:  " << std::endl;
  //	std::cout << "const char GENESIS_COINBASE_TX_HEX[] = \"" << tx_hex << "\";" << std::endl;
 //   }
 //   return;
@@ -135,21 +135,21 @@ JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
 }
 
 void renameDataDir() {
-  std::string concealXDir = Tools::getDefaultDataDirectory();
-  boost::filesystem::path concealXDirPath(concealXDir);
-  if (boost::filesystem::exists(concealXDirPath)) {
+  std::string litheDir = Tools::getDefaultDataDirectory();
+  boost::filesystem::path litheDirPath(litheDir);
+  if (boost::filesystem::exists(litheDirPath)) {
     return;
   }
 
-  std::string dataDirPrefix = concealXDir.substr(0, concealXDir.size() + 1 - sizeof(CRYPTONOTE_NAME));
+  std::string dataDirPrefix = litheDir.substr(0, litheDir.size() + 1 - sizeof(CRYPTONOTE_NAME));
   boost::filesystem::path cediDirPath(dataDirPrefix + "BXC");
 
   if (boost::filesystem::exists(cediDirPath)) {
-    boost::filesystem::rename(cediDirPath, concealXDirPath);
+    boost::filesystem::rename(cediDirPath, litheDirPath);
   } else {
     boost::filesystem::path BcediDirPath(dataDirPrefix + "Bcedi");
     if (boost::filesystem::exists(boost::filesystem::path(BcediDirPath))) {
-		boost::filesystem::rename(BcediDirPath, concealXDirPath);
+		boost::filesystem::rename(BcediDirPath, litheDirPath);
     }
   }
 }
