@@ -28,8 +28,6 @@ public:
   bool setFeeAddress(const std::string& fee_address, const AccountPublicAddress& fee_acc);
   bool setViewKey(const std::string& view_key);
   bool restrictRPC(const bool is_resctricted);
-  bool k_on_check_tx_proof(const K_COMMAND_RPC_CHECK_TX_PROOF::request& req, K_COMMAND_RPC_CHECK_TX_PROOF::response& res);
-  bool k_on_check_reserve_proof(const K_COMMAND_RPC_CHECK_RESERVE_PROOF::request& req, K_COMMAND_RPC_CHECK_RESERVE_PROOF::response& res);  
   bool enableCors(const std::vector<std::string> domains);
   std::vector<std::string> getCorsDomains();
   bool remotenode_check_incoming_tx(const BinaryArray& tx_blob);

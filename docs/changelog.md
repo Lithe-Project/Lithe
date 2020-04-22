@@ -20,3 +20,6 @@
   - **@NOTE:** This could be a fix for *all* other CryptoNote based coins. 
 - Updated Copyrights.
 - Add AppVeyor build status and binary distribution.
+- Chacha8 cleanup.
+- Better logging in some areas.
+- Daemon now generates and shows you a peer id.
