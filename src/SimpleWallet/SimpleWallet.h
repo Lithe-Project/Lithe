@@ -17,6 +17,7 @@
 
 #include "IWalletLegacy.h"
 #include "PasswordContainer.h"
+#include "TransferCommand.h"
 
 #include "Common/ConsoleHandler.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
@@ -64,6 +65,8 @@ namespace CryptoNote
     }
 
     void handle_command_line(const boost::program_options::variables_map& vm);
+    void log_incorrect_words(std::vector<std::string>);
+    void printConnectionError() const;
 
     bool run_console_handler();
 
@@ -71,6 +74,9 @@ namespace CryptoNote
     bool new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password);
     bool open_wallet(const std::string &wallet_file, const std::string& password);
     bool close_wallet();
+    bool ask_wallet_create_if_needed();
+    bool is_valid_mnemonic(std::string &, Crypto::SecretKey &);
+    bool confirmTransaction(TransferCommand, bool);
 
     bool help(const std::vector<std::string> &args = std::vector<std::string>());
     bool exit(const std::vector<std::string> &args);
@@ -88,8 +94,6 @@ namespace CryptoNote
     bool show_blockchain_height(const std::vector<std::string> &args);
     bool show_num_unlocked_outputs(const std::vector<std::string> &args);
     bool optimize_outputs(const std::vector<std::string> &args);
-	  bool get_reserve_proof(const std::vector<std::string> &args);    
-    bool get_tx_proof(const std::vector<std::string> &args);    
     bool optimize_all_outputs(const std::vector<std::string> &args);
     bool listTransfers(const std::vector<std::string> &args);
     bool transfer(const std::vector<std::string> &args);
@@ -98,14 +102,9 @@ namespace CryptoNote
     bool reset(const std::vector<std::string> &args);
     bool set_log(const std::vector<std::string> &args);
 
-    bool ask_wallet_create_if_needed();
     std::string resolveAlias(const std::string& aliasUrl);
-    void printConnectionError() const;
 
     std::string generate_mnemonic(Crypto::SecretKey &);
-    void log_incorrect_words(std::vector<std::string>);
-    bool is_valid_mnemonic(std::string &, Crypto::SecretKey &);
-
 
     //---------------- IWalletLegacyObserver -------------------------
     virtual void initCompleted(std::error_code result) override;
@@ -180,6 +179,7 @@ namespace CryptoNote
     Logging::LoggerManager& logManager;
     System::Dispatcher& m_dispatcher;
     Logging::LoggerRef logger;
+    Tools::PasswordContainer m_pwd_container;
 
     std::unique_ptr<CryptoNote::NodeRpcProxy> m_node;
     std::unique_ptr<CryptoNote::IWalletLegacy> m_wallet;
