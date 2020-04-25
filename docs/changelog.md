@@ -2,6 +2,12 @@
 
 ## Changelog
 
+#### v0.0.2 - Pre-Alpha Stage 2
+> Stage 2 of Pre-Alpha is the stage of letting more people know about Lithe. No main chain is still yet to be
+  active. Everything is currently running using `--testnet` within `lithe-daemon` and `lithe-wallet`.
+
+- 
+
 #### v0.0.1 - Pre-Alpha
 - Forked Conceal at [this commit](https://github.com/ConcealNetwork/conceal-core/commit/6c07dbd781deed8d6e49fe98abac5e8175650321).
 - Made the necessary changes to disconnect it from Conceals network to its own independent network ready.
@@ -23,3 +29,6 @@
 - Chacha8 cleanup.
 - Better logging in some areas.
 - Daemon now generates and shows you a peer id.
+- Better UI for `lithe-wallet`.
+- More code cleanup and fixes
+- Add validate password `lithe-wallet`
