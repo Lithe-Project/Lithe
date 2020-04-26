@@ -29,7 +29,7 @@ If you're intrested in taking part with **Lithe** before mainnet, then it is sug
 #### Documents
 
 - [Wikithe]() <- finish lithe wiki "wikithe"
-- [Changelog](https://github.com/LithyRiolu/lithe/blob/master/docs/changelog.md)
+- [Changelog](https://github.com/Lithe-Project/Lithe/blob/master/docs/changelog.md)
 
 #### Applications
 
@@ -39,7 +39,7 @@ If you're intrested in taking part with **Lithe** before mainnet, then it is sug
 
 #### Contribute
 
-- Submit a new [pull request with your work](https://github.com/LithyRiolu/lithe/pulls)
+- Submit a new [pull request with your work](https://github.com/Lithe-Project/Lithe/pulls)
 - Become a beta tester by joining [our Discord Server](https://discord.gg/qCtQfhs)
 
 #### Contact
