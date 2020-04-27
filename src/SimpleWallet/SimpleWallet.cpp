@@ -25,6 +25,7 @@
 
 #include "Common/Base58.h"
 #include "Common/CommandLine.h"
+#include "Common/ColouredMsg.h"
 #include "Common/SignalHandler.h"
 #include "Common/StringTools.h"
 #include "Common/PathTools.h"
@@ -515,11 +516,10 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
 
     std::cout << std::endl << "Welcome, please choose an option below:"
               << std::endl 
-              << std::endl << "\t[G] - Generate a new wallet address"
-              << std::endl << "\t[O] - Open a wallet already on your system"
-              << std::endl << "\t[S] - Regenerate your wallet using a seed phrase of words"
-              << std::endl << "\t[I] - Import your wallet using a View Key and Spend Key"
-            /*<< std::endl << "\t[V] - Import a View Key and create a view-only wallet"*/
+              << std::endl << BrightMagentaMsg("\t[G]") << " - Generate a new wallet address"
+              << std::endl << BrightMagentaMsg("\t[O]") << " - Open a wallet already on your system"
+              << std::endl << BrightMagentaMsg("\t[S]") << " - Regenerate your wallet using a seed phrase of words"
+              << std::endl << BrightMagentaMsg("\t[I]") << " - Import your wallet using a View Key and Spend Key"
               << std::endl << std::endl << "or, press CTRL_C to exit: "
               << std::flush;
 
@@ -701,11 +701,7 @@ if (key_import) {
     m_node->addObserver(static_cast<INodeObserver*>(this));
 
     logger(INFO, BRIGHT_WHITE) << "Opened wallet: " << m_wallet->getAddress();
-
-    success_msg_writer() <<
-      "**********************************************************************\n" <<
-      "Use \"help\" command to see the list of available commands.\n" <<
-      "**********************************************************************";
+    logger(INFO, YELLOW) << "Use \"help\" command to see the list of available commands.\n";
   }
 
   return true;
@@ -818,28 +814,44 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
     std::string secretKeysData = std::string(reinterpret_cast<char*>(&keys.spendSecretKey), sizeof(keys.spendSecretKey)) + std::string(reinterpret_cast<char*>(&keys.viewSecretKey), sizeof(keys.viewSecretKey));
     std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
 
-    logger(INFO, BRIGHT_GREEN) << "lithe-wallet is an open-source, client-side, free wallet which allow you to send and receive $LXTH instantly on the blockchain. You are  in control of your funds & your keys. When you generate a new wallet, login, send, receive or deposit $LXTH everything happens locally. Your seed is never transmitted, received or stored. That's why its imperative to write, print or save your seed somewhere safe. The backup of keys is your responsibility. If you lose your seed, your account can not be recovered. The Lithe Projects Team doesn't take any responsibility for lost funds due to nonexistent/missing/lost private keys." << std::endl << std::endl;
+    std::cout << "" << std::endl
+              << BrightMagentaMsg("lithe-wallet is an open-source, client-side, free wallet which") << std::endl
+              << BrightMagentaMsg("allow you to send and receive $LXTH instantly on the blockchain.") << std::endl
+              << "" << std::endl
+              << "You are in control of your funds & your keys." << std::endl
+              << "" << std::endl
+              << "When you generate a new wallet, login, send, receive or deposit $LXTH - everything happens locally." << std::endl
+              << "" << std::endl
+              << "Your seed is never transmitted, received or stored - anywhere." << std::endl
+              << "That's why its imperative to write, print or save your seed somewhere safe." << std::endl
+              << "The backup of keys is YOUR responsibility." << std::endl
+              << "" << std::endl
+              << BrightRedMsg("If you lose your seed, your account can not be recovered.") << std::endl
+              << "" << std::endl
+              << BrightYellowMsg("The Lithe Projects Team doesn't take any responsibility for lost") << std::endl
+              << BrightYellowMsg("funds due to nonexistent/missing/lost private keys.") << std::endl
+              << "" << std::endl;
 
-    logger(INFO, BRIGHT_WHITE) <<
-      "Wallet Address: " << m_wallet->getAddress() << std::endl <<
-      "Private View Key: " << Common::podToHex(keys.viewSecretKey) << std::endl <<
-      "Private Spend Key: " << Common::podToHex(keys.spendSecretKey) << std::endl <<
-      "Mnemonic Seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl << std::endl;
 
+    std::cout << "Wallet Address: " << BrightMagentaMsg(m_wallet->getAddress()) << std::endl;
+    std::cout << "Private spend key: " << BrightMagentaMsg(Common::podToHex(keys.spendSecretKey)) << std::endl;
+    std::cout << "Private view key: " << BrightMagentaMsg(Common::podToHex(keys.viewSecretKey)) << std::endl;
+    std::cout << "Mnemonic Seed: " << BrightMagentaMsg(generate_mnemonic(keys.spendSecretKey)) << std::endl;
   }
   catch (const std::exception& e) {
     fail_msg_writer() << "failed to generate new wallet: " << e.what();
     return false;
   }
 
-  success_msg_writer() <<
-    "**********************************************************************\n" <<
-    "Your wallet has been generated.\n" <<
-    "Use \"help\" command to see the list of available commands.\n" <<
-    "Always use \"exit\" command when closing simplewallet to save\n" <<
-    "current session's state. Otherwise, you will possibly need to synchronize \n" <<
-    "your wallet again. Your wallet key is NOT under risk anyway.\n" <<
-    "**********************************************************************";
+  std::cout << "" << std::endl
+            << BrightGreenMsg("Congratulations, your wallet has been created!") << std::endl
+            << "" << std::endl
+            << BrightYellowMsg("You should always use \"exit\" command when closing lithe-wallet to save") << std::endl
+            << BrightYellowMsg("your current session's state.") << std::endl
+            << BrightYellowMsg("Otherwise, you will possibly need to re-synchronize your chain.") << std::endl
+            << "" << std::endl
+            << YellowMsg("If you forget to use exit, your wallet is not at risk in anyway.") << std::endl;
+
   return true;
 }
 //----------------------------------------------------------------------------------------------------
