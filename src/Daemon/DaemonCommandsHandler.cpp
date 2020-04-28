@@ -16,6 +16,8 @@
 #include "Serialization/SerializationTools.h"
 #include "version.h"
 
+#include "Common/ColouredMsg.h"
+
 namespace {
   template <typename T>
   static bool print_as_json(const T& obj) {

@@ -520,7 +520,8 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
               << std::endl << BrightMagentaMsg("\t[O]") << " - Open a wallet already on your system"
               << std::endl << BrightMagentaMsg("\t[S]") << " - Regenerate your wallet using a seed phrase of words"
               << std::endl << BrightMagentaMsg("\t[I]") << " - Import your wallet using a View Key and Spend Key"
-              << std::endl << std::endl << "or, press CTRL_C to exit: "
+              << std::endl 
+              << std::endl << YellowMsg("or, press CTRL_C to exit: ")
               << std::flush;
 
     char c;
@@ -540,13 +541,14 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
       return false;
     }
 
-    std::cout << "Specify wallet file name (e.g., name.wallet).\n";
+    std::cout << BrightGreenMsg("Specify wallet file name ")
+              << BrightMagentaMsg("(e.g., name.wallet).\n") << std::endl;
     std::string userInput;
     do {
       if (c == 'o') {
-        std::cout << "Enter the name of the wallet you wish to open: ";
+        std::cout << BrightGreenMsg("Enter the name of the wallet you wish to open: ");
       } else {
-        std::cout << "What do you want to call your new wallet?: ";
+        std::cout << BrightGreenMsg("What do you want to call your new wallet?: ");
       }
       std::getline(std::cin, userInput);
       boost::algorithm::trim(userInput);
@@ -707,7 +709,6 @@ if (key_import) {
   return true;
 }
 
-
 //----------------------------------------------------------------------------------------------------
 /* adding support for 25 word electrum seeds. however, we have to ensure that all old wallets that are
 not deterministic, dont get a seed to avoid any loss of funds.
@@ -843,13 +844,13 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
     return false;
   }
 
-  std::cout << "" << std::endl
+  std::cout << std::endl
             << BrightGreenMsg("Congratulations, your wallet has been created!") << std::endl
-            << "" << std::endl
+            << std::endl
             << BrightYellowMsg("You should always use \"exit\" command when closing lithe-wallet to save") << std::endl
             << BrightYellowMsg("your current session's state.") << std::endl
             << BrightYellowMsg("Otherwise, you will possibly need to re-synchronize your chain.") << std::endl
-            << "" << std::endl
+            << std::endl
             << YellowMsg("If you forget to use exit, your wallet is not at risk in anyway.") << std::endl;
 
   return true;
@@ -1043,23 +1044,30 @@ void simple_wallet::externalTransactionCreated(CryptoNote::TransactionId transac
   WalletLegacyTransaction txInfo;
   m_wallet->getTransaction(transactionId, txInfo);
 
-  std::stringstream logPrefix;
-  if (txInfo.blockHeight == WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT) {
-    logPrefix << "Unconfirmed";
-  } else {
-    logPrefix << "Height " << txInfo.blockHeight << ',';
-  }
-
+  /* this tells the wallet to show incoming+outgoing transactions live */
   if (txInfo.totalAmount >= 0) {
-    logger(INFO, GREEN) <<
-      logPrefix.str() << " transaction " << Common::podToHex(txInfo.hash) <<
+    logger(DEBUGGING) <<
+      "height: " << txInfo.blockHeight << " transaction " << Common::podToHex(txInfo.hash) <<
       ", received " << m_currency.formatAmount(txInfo.totalAmount);
+    
+    std::cout << std::endl
+              << BrightGreenMsg("New Transaction Found:") << std::endl
+              << BrightGreenMsg("Height: ") << BrightMagentaMsg(std::to_string(txInfo.blockHeight)) << std::endl
+              << BrightGreenMsg("Transaction: ") << BrightMagentaMsg(Common::podToHex(txInfo.hash)) << std::endl
+              << BrightGreenMsg("Amount: ") << BrightMagentaMsg(m_currency.formatAmount(txInfo.totalAmount)) << std::endl;
   } else {
-    logger(INFO, MAGENTA) <<
-      logPrefix.str() << " transaction " << Common::podToHex(txInfo.hash) <<
+    logger(DEBUGGING) <<
+      "height: " << txInfo.blockHeight << " transaction " << Common::podToHex(txInfo.hash) <<
       ", spent " << m_currency.formatAmount(static_cast<uint64_t>(-txInfo.totalAmount));
+    
+    std::cout << std::endl
+              << BrightGreenMsg("Outgoing Transaction Found:") << std::endl
+              << BrightGreenMsg("Height: ") << BrightMagentaMsg(std::to_string(txInfo.blockHeight)) << std::endl
+              << BrightGreenMsg("Transaction: ") << BrightMagentaMsg(Common::podToHex(txInfo.hash)) << std::endl
+              << BrightGreenMsg("Spent: ") << BrightMagentaMsg(m_currency.formatAmount(static_cast<uint64_t>(-txInfo.totalAmount))) << std::endl;
   }
 
+  /* this calls void update(...) from simplewallet.h */
   if (txInfo.blockHeight == WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT) {
     m_refresh_progress_reporter.update(m_node->getLastLocalBlockHeight(), true);
   } else {
@@ -1081,9 +1089,14 @@ void simple_wallet::synchronizationProgressUpdated(uint32_t current, uint32_t to
 }
 
 bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::vector<std::string>()*/) {
-  success_msg_writer() << "available balance: " << m_currency.formatAmount(m_wallet->actualBalance()) <<
+  logger(DEBUGGING) << "available balance: " << m_currency.formatAmount(m_wallet->actualBalance()) <<
     ", locked amount: " << m_currency.formatAmount(m_wallet->pendingBalance()) <<
     ", total amount: " << m_currency.formatAmount(m_wallet->actualBalance() + m_wallet->pendingBalance());
+
+  std::cout << std::endl
+            << BrightGreenMsg("Available Balance: ") << BrightMagentaMsg(m_currency.formatAmount(m_wallet->actualBalance())) << std::endl
+            << BrightGreenMsg("Locked Balance: ") << BrightMagentaMsg(m_currency.formatAmount(m_wallet->pendingBalance())) << std::endl
+            << BrightGreenMsg("Total Balance: ") << BrightMagentaMsg(m_currency.formatAmount(m_wallet->actualBalance() + m_wallet->pendingBalance())) << std::endl;
   return true;
 }
 

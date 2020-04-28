@@ -481,7 +481,7 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
 
   if (tvc.m_verification_failed)
   {
-    logger(INFO, RED) << "- rpcserver.cpp - " << "[on_send_raw_tx]: tx verification failed";
+    logger(DEBUGGING) << "- rpcserver.cpp - " << "[on_send_raw_tx]: tx verification failed";
     res.status = "Failed";
     return true;
   }
@@ -497,7 +497,7 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
 
   if (!m_fee_address.empty() && m_view_key != NULL_SECRET_KEY) {
     if (!remotenode_check_incoming_tx(tx_blob)) {
-      logger(INFO) << "<< rpcserver.cpp << " << "Transaction not relayed due to lack of remote node fee";		
+      logger(INFO) << "- rpcserver.cpp - " << "Transaction not relayed due to lack of remote node fee";		
       res.status = "Not relayed due to lack of node fee";
       return true;
     }

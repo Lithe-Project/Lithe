@@ -28,6 +28,8 @@
 #include "CryptoNoteFormatUtils.h"
 #include "TransactionExtra.h"
 
+#include "Common/ColouredMsg.h"
+
 using namespace Logging;
 
 namespace CryptoNote
@@ -168,7 +170,10 @@ namespace CryptoNote
         loadFromJson(m_config, filebuf);
       }
 
-      logger(INFO, GREEN) << "Loaded " << m_extra_messages.size() << " extra messages, current index " << m_config.current_extra_message_index;
+      logger(DEBUGGING) << "Loaded " << m_extra_messages.size() << " extra messages, current index " << m_config.current_extra_message_index;
+      std::cout << BrightGreenMsg("Loaded ") << BrightMagentaMsg(std::to_string(m_extra_messages.size()))
+                << BrightGreenMsg(" extra messages.\nCurrent Index: ")
+                << BrightMagentaMsg(std::to_string(m_config.current_extra_message_index)) << std::endl;
     }
 
     if(!config.startMining.empty()) {
@@ -219,7 +224,11 @@ namespace CryptoNote
       m_threads.push_back(std::thread(std::bind(&miner::worker_thread, this, i)));
     }
 
-    logger(INFO, GREEN) << "Mining has started with " << threads_count << " threads, good luck!";
+    logger(DEBUGGING) << "Mining has started with " << threads_count << " threads, good luck!";
+    std::cout << BrightGreenMsg("Mining has starting. You are currently using ")
+              << BrightMagentaMsg(std::to_string(threads_count))
+              << BrightGreenMsg(" threads.") << std::endl;
+
     return true;
   }
   
@@ -249,7 +258,8 @@ namespace CryptoNote
     }
 
     m_threads.clear();
-    logger(INFO, YELLOW) << "- Miner.cpp - " << "Mining has been stopped, " << m_threads.size() << " finished" ;
+    logger(DEBUGGING) << "Mining has been stopped, " << m_threads.size() << " finished" ;
+    std::cout << YellowMsg("Mining has been stopped.") << std::endl;
     return true;
   }
   //-----------------------------------------------------------------------------------------------------
@@ -341,7 +351,10 @@ namespace CryptoNote
   //-----------------------------------------------------------------------------------------------------
   bool miner::worker_thread(uint32_t th_local_index)
   {
-    logger(INFO, GREEN) << "Miner thread was started ["<< th_local_index << "]";
+    logger(DEBUGGING) << "Miner thread was started ["<< th_local_index << "]";
+    std::cout << BrightGreenMsg("The Miner thread was started: ")
+              << BrightMagentaMsg(std::to_string(th_local_index)) << std::endl;
+
     uint32_t nonce = m_starter_nonce + th_local_index;
     difficulty_type local_diff = 0;
     uint32_t local_template_ver = 0;
@@ -385,7 +398,9 @@ namespace CryptoNote
         //we lucky!
         ++m_config.current_extra_message_index;
 
-        logger(INFO, GREEN) << "Found block for difficulty: " << local_diff;
+        logger(DEBUGGING) << "Found block for difficulty: " << local_diff;
+        std::cout << BrightGreenMsg("Found Block for difficulty: ")
+                  << BrightMagentaMsg(std::to_string(local_diff)) << std::endl;
 
         if(!m_handler.handle_block_found(b)) {
           --m_config.current_extra_message_index;
@@ -398,7 +413,9 @@ namespace CryptoNote
       nonce += m_threads_total;
       ++m_hashes;
     }
-    logger(INFO, YELLOW) << "Miner thread stopped ["<< th_local_index << "]";
+    logger(DEBUGGING) << "Miner thread stopped ["<< th_local_index << "]";
+    std::cout << GreenMsg("Miner thread stopped ")
+              << BrightMagentaMsg(std::to_string(th_local_index)) << std::endl;
     return true;
   }
   //-----------------------------------------------------------------------------------------------------

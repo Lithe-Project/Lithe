@@ -27,6 +27,8 @@
 #include "TransactionExtra.h"
 #include "IBlock.h"
 
+#include "Common/ColouredMsg.h"
+
 #undef ERROR
 
 using namespace Logging;
@@ -679,13 +681,20 @@ bool core::update_miner_block_template() {
 
 bool core::on_idle() {
   if (!m_starter_message_showed) {
-    logger(INFO, MAGENTA) << "**********************************************************************" << ENDL;
-    logger(INFO, BRIGHT_YELLOW) << "The daemon will continue synchronizing with the network." << ENDL;
-    logger(INFO, BRIGHT_YELLOW) << "If this is a new installation it may take up to several hours." << ENDL;
-    logger(INFO, BRIGHT_YELLOW) << "You can set the level of process detailization through \"set_log <level>\" command*, where <level> is between 0 (no details) and 4 (very verbose)." << ENDL;
-    logger(INFO, BRIGHT_YELLOW) << "Use \"help\" command to see the list of available commands." << ENDL;
-    logger(INFO, RED) << "Note: in case you need to interrupt the process, use \"exit\" command. Otherwise, the current progress won't be saved." << ENDL;
-    logger(INFO, MAGENTA) << "**********************************************************************";
+    /* no need to log starter message */
+    std::cout << std::endl
+              << BrightGreenMsg("Your Daemon is setup and ready to go!") << std::endl
+              << std::endl
+              << BrightMagentaMsg("Your Daemon will now continue synchronizing\n with the network.") << std::endl
+              << std::endl
+              << BrightYellowMsg("You should always use \"exit\" command when closing\n lithe-wallet to save your current session's state.") << std::endl
+              << std::endl
+              << BrightYellowMsg("Otherwise, you will possibly need to re-synchronize\n your chain.") << std::endl
+              << std::endl
+              << GreenMsg("Type \"help\" to see the list of available commands.") << std::endl
+              << std::endl
+              << BrightMagentaMsg("Good luck!") << std::endl;
+    
     m_starter_message_showed = true;
   }
 

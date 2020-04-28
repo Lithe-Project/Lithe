@@ -43,6 +43,8 @@
 #include "Serialization/BinaryOutputStreamSerializer.h"
 #include "Serialization/SerializationOverloads.h"
 
+#include "Common/ColouredMsg.h"
+
 //#include "Common/StringTools.h"
 
 using namespace Common;
@@ -61,9 +63,13 @@ size_t get_random_index_with_fixed_probability(size_t max_index) {
   return (x * x * x ) / (max_index * max_index); //parabola \/
 }
 
+// Add UPnP port mapping
 void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
-  // Add UPnP port mapping
-  logger(INFO, YELLOW) <<  "- NetNode.cpp - Attempting to add IGD port mapping.";
+  /* tell the log */
+  logger(DEBUGGING) <<  "Attempting to add IGD port mapping.";
+  /* now the user */
+  std::cout << YellowMsg("Attempting to add IGD Port Mapping.") << std::endl;
+
   int result;
   UPNPDev* deviceList = upnpDiscover(1000, NULL, NULL, 0, 0, &result);
   UPNPUrls urls;
@@ -77,21 +83,35 @@ void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
       portString << port;
       if (UPNP_AddPortMapping(urls.controlURL, igdData.first.servicetype, portString.str().c_str(),
         portString.str().c_str(), lanAddress, CryptoNote::CRYPTONOTE_NAME, "TCP", 0, "0") != 0) {
-        logger(ERROR) << "- Netnode.cpp - UPNP_AddPortMapping failed.";
+        /* tell the user and log */
+        logger(ERROR) << "UPNP_AddPortMapping failed.";
       } else {
-        logger(INFO, BRIGHT_GREEN) << "- Netnode.cpp - Added IGD port mapping.";
+        /* tell the log */
+        logger(DEBUGGING) << "Added IGD port mapping.";
+        /* now the user */
+        std::cout << BrightGreenMsg("Added IGD Port Mapping.") << std::endl;
       }
     } else if (result == 2) {
-      logger(INFO, YELLOW) <<  "- Netnode.cpp - IGD was found but reported as not connected.";
+      /* tell the log */
+      logger(DEBUGGING) <<  "IGD was found but reported as not connected.";
+      /* now the user */
+      std::cout << YellowMsg("IGD was found but reported as not connected.") << std::endl;
     } else if (result == 3) {
-      logger(INFO, YELLOW) <<  "- Netnode.cpp - UPnP device was found but not recoginzed as IGD.";
+      /* tell the log */
+      logger(DEBUGGING) <<  "UPnP device was found but not recoginzed as IGD.";
+      /* now the user */
+      std::cout << YellowMsg("UPnP device was found but not recoginzed as IGD.") << std::endl;
     } else {
-      logger(ERROR) << "- Netnode.cpp - UPNP_GetValidIGD returned an unknown result code.";
+      /* tell the user and log */
+      logger(ERROR) << "UPNP_GetValidIGD returned an unknown result code.";
     }
 
     FreeUPNPUrls(&urls);
   } else {
-    logger(INFO, YELLOW) <<  "- Netnode.cpp - No IGD was found.";
+    /* tell the log */
+    logger(DEBUGGING) <<  "No IGD was found.";
+    /* now the user */
+    std::cout << YellowMsg("No IGD was found.") << std::endl;
   }
 }
 
@@ -332,7 +352,13 @@ namespace CryptoNote
   bool NodeServer::make_default_config()
   {
     m_config.m_peer_id  = Crypto::rand<uint64_t>();
-    logger(INFO, BRIGHT_MAGENTA) << "- NetNode.cpp - Generated new peer ID: " << m_config.m_peer_id;
+    
+    /* tell the log */
+    logger(DEBUGGING) << "Generated new peer ID: " << m_config.m_peer_id;
+    /* now the user */
+    std::cout << BrightGreenMsg("Your newly generated peer ID is ")
+              << BrightMagentaMsg(std::to_string(m_config.m_peer_id)) << std::endl;
+
     return true;
   }
 
@@ -465,20 +491,33 @@ namespace CryptoNote
     m_ip_address = 0;
     m_last_stat_request_time = 0;
 
-    //configure self
-    // m_net_server.get_config_object().m_pcommands_handler = this;
-    // m_net_server.get_config_object().m_invoke_timeout = CryptoNote::P2P_DEFAULT_INVOKE_TIMEOUT;
-
     //try to bind
-    logger(INFO, GREEN) <<  "- NetNode.cpp - Binding on " << m_bind_ip << ":" << m_port;
+    /* tell the log */
+    logger(DEBUGGING) <<  "Binding on " << m_bind_ip << ":" << m_port;
+    /* now the user */
+    std::cout << BrightGreenMsg("Binding on: ")
+              << BrightMagentaMsg(m_bind_ip) 
+              << BrightMagentaMsg(":")
+              << BrightMagentaMsg(m_port) << std::endl;
+
     m_listeningPort = Common::fromString<uint16_t>(m_port);
 
     m_listener = System::TcpListener(m_dispatcher, System::Ipv4Address(m_bind_ip), static_cast<uint16_t>(m_listeningPort));
 
-    logger(INFO, GREEN) << "- Netnode.cpp - Net service bound on " << m_bind_ip << ":" << m_listeningPort;
+    /* tell the log */
+    logger(DEBUGGING) << "Net service bound on " << m_bind_ip << ":" << m_listeningPort;
+    /* now the user */
+    std::cout << BrightGreenMsg("Net service bound on: ")
+              << BrightMagentaMsg(m_bind_ip) 
+              << BrightMagentaMsg(":")
+              << BrightMagentaMsg(std::to_string(m_listeningPort)) << std::endl;
 
     if(m_external_port) {
-      logger(INFO, GREEN) <<  "External port defined as " << m_external_port;
+      /* tell the log */
+      logger(DEBUGGING) <<  "External port defined as " << m_external_port;
+      /* now the user */
+      std::cout << BrightGreenMsg("External port defined as: ")
+                << BrightMagentaMsg(std::to_string(m_external_port)) << std::endl;
     }
 
     addPortMapping(logger, m_listeningPort);
@@ -494,7 +533,10 @@ namespace CryptoNote
   //-----------------------------------------------------------------------------------
 
   bool NodeServer::run() {
-    logger(INFO, GREEN) <<  "- NetNode.cpp - Starting node_server";
+    /* tell the log */
+    logger(DEBUGGING) <<  "Starting node_server";
+    /* now the user */
+    std::cout << BrightGreenMsg("Starting Node Server.") << std::endl;
 
     m_workingContextGroup.spawn(std::bind(&NodeServer::acceptLoop, this));
     m_workingContextGroup.spawn(std::bind(&NodeServer::onIdle, this));
@@ -503,11 +545,20 @@ namespace CryptoNote
 
     m_stopEvent.wait();
 
-    logger(INFO, YELLOW) <<  "Stopping NodeServer and it's, " << m_connections.size() << " connections...";
+    /* tell the log */
+    logger(DEBUGGING) <<  "Stopping NodeServer and it's, " << m_connections.size() << " connections...";
+    /* now the user */
+    std::cout << GreenMsg("Stopping NodeServer and it's: ")
+              << BrightMagentaMsg(std::to_string(m_connections.size()))
+              << GreenMsg(" connections.") << std::endl;
+
     safeInterrupt(m_workingContextGroup);
     m_workingContextGroup.wait();
 
-    logger(INFO, YELLOW) <<  "NodeServer loop stopped";
+    /* tell the log */
+    logger(DEBUGGING) <<  "NodeServer loop stopped";
+    /* now the user */
+    std::cout << GreenMsg("Node Server Loop stopped.") << std::endl;
     return true;
   }
 
@@ -560,7 +611,8 @@ namespace CryptoNote
       m_payload_handler.stop();
     });
 
-    logger(INFO, YELLOW) << "Stop signal sent";
+    logger(DEBUGGING) << "Stop signal sent";
+    std::cout << YellowMsg("Stopping the Daemon now.") << std::endl;
     return true;
   }
 
