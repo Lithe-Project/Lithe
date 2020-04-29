@@ -43,16 +43,17 @@ void relay_post_notify(IP2pEndpoint &p2p, typename t_parametr::request &arg, con
 
 } // namespace
 
-CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency &currency, System::Dispatcher &dispatcher, ICore &rcore, IP2pEndpoint *p_net_layout, Logging::ILogger &log) : m_dispatcher(dispatcher),
-                                                                                                                                                                                  m_currency(currency),
-                                                                                                                                                                                  m_core(rcore),
-                                                                                                                                                                                  m_p2p(p_net_layout),
-                                                                                                                                                                                  m_synchronized(false),
-                                                                                                                                                                                  m_stop(false),
-                                                                                                                                                                                  m_observedHeight(0),
-                                                                                                                                                                                  m_peersCount(0),
-                                                                                                                                                                                  logger(log, "protocol")
-{
+CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency &currency, System::Dispatcher &dispatcher, ICore &rcore, IP2pEndpoint *p_net_layout, Logging::ILogger &log) : 
+  m_dispatcher(dispatcher),
+  m_currency(currency),
+  m_core(rcore),
+  m_p2p(p_net_layout),
+  m_synchronized(false),
+  m_stop(false),
+  m_observedHeight(0),
+  m_blockchainHeight(0),
+  m_peersCount(0),
+  logger(log, "protocol") {
 
   if (!m_p2p)
   {
@@ -202,6 +203,12 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA &
                                                                                           << "Synchronization started";
 
     logger(DEBUGGING) << "Remote top block height: " << hshd.current_height << ", id: " << hshd.top_id;
+    
+    logger(diff >= 0 ? (is_inital ? Logging::INFO : Logging::DEBUGGING) : Logging::TRACE, Logging::BRIGHT_GREEN) << context <<
+      "Your Lithe node is syncing with the network. You are "
+      << std::abs(diff) << " blocks (" << std::abs(diff) / (24 * 60 * 60 / m_currency.difficultyTarget()) << " days) "
+      << (diff >= 0 ? std::string("behind") : std::string("ahead of")) << ". Slow and steady wins the race! " << std::endl;
+
     //let the socket to send response to handshake, but request callback, to let send request data after response
     logger(Logging::TRACE) << context << "requesting synchronization";
     context.m_state = CryptoNoteConnectionContext::state_sync_required;
@@ -837,6 +844,14 @@ void CryptoNoteProtocolHandler::updateObservedHeight(uint32_t peerHeight, const 
     }
   }
 
+  {
+    std::lock_guard<std::mutex> lock(m_blockchainHeightMutex);
+    if (peerHeight > m_blockchainHeight) {
+      m_blockchainHeight = peerHeight;
+      logger(Logging::INFO, Logging::BRIGHT_GREEN) << "New Top Block Detected: " << peerHeight; 
+    }
+  }
+
   if (updated)
   {
     logger(TRACE) << "Observed height updated: " << m_observedHeight;
@@ -869,6 +884,11 @@ uint32_t CryptoNoteProtocolHandler::getObservedHeight() const
 {
   std::lock_guard<std::mutex> lock(m_observedHeightMutex);
   return m_observedHeight;
+};
+
+uint32_t CryptoNoteProtocolHandler::getBlockchainHeight() const {
+  std::lock_guard<std::mutex> lock(m_blockchainHeightMutex);
+  return m_blockchainHeight;  
 };
 
 bool CryptoNoteProtocolHandler::addObserver(ICryptoNoteProtocolObserver *observer)

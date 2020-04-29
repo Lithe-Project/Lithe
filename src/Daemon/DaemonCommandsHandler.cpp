@@ -17,6 +17,8 @@
 #include "version.h"
 
 #include "Common/ColouredMsg.h"
+#include <boost/format.hpp>
+#include "Rpc/RpcServer.h"
 
 namespace {
   template <typename T>
@@ -27,8 +29,8 @@ namespace {
 }
 
 
-DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core& core, CryptoNote::NodeServer& srv, Logging::LoggerManager& log) :
-  m_core(core), m_srv(srv), logger(log, "daemon"), m_logManager(log) {
+DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core& core, CryptoNote::NodeServer& srv, Logging::LoggerManager& log, CryptoNote::RpcServer* prpc_server) :
+  m_core(core), m_srv(srv), logger(log, "daemon"), m_logManager(log), m_prpc_server(prpc_server) {
   m_consoleHandler.setHandler("exit", boost::bind(&DaemonCommandsHandler::exit, this, _1), "Shutdown the daemon");
   m_consoleHandler.setHandler("help", boost::bind(&DaemonCommandsHandler::help, this, _1), "Show this help");
   m_consoleHandler.setHandler("print_pl", boost::bind(&DaemonCommandsHandler::print_pl, this, _1), "Print peer list");
@@ -62,22 +64,43 @@ std::string DaemonCommandsHandler::get_commands_str()
 }
 
 //--------------------------------------------------------------------------------
+std::string DaemonCommandsHandler::get_mining_speed(uint32_t hr)
+{
+  // Code snippet from Monero Project
+  if (hr>1e9) return (boost::format("%.2f GH/s") % (hr/1e9)).str();
+  if (hr>1e6) return (boost::format("%.2f MH/s") % (hr/1e6)).str();
+  if (hr>1e3) return (boost::format("%.2f kH/s") % (hr/1e3)).str();
+  return (boost::format("%.0f H/s") % hr).str();
+}
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::status(const std::vector<std::string>& args)
+{
+  CryptoNote::COMMAND_RPC_GET_INFO::request req;
+  CryptoNote::COMMAND_RPC_GET_INFO::response resp;
 
-bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
-  
-  /*
-   * Its very basic but it works
-   */
-  std::cout
-  << "Height: "   << m_core.get_current_blockchain_height() << std::endl
-  << "Net-Type: " << (m_core.currency().isTestnet() ? "Testnet" : "Mainnet") << std::endl
-  << "Software Version: " << PROJECT_VERSION << std::endl
-  // @TODO: Obviously needs more stuff here
-  << std::endl;
-  
+  if (!m_prpc_server->on_get_info(req, resp)) {
+    return false;
+  }
+
+  std::cout 
+    << "Height: " << resp.height << "/" << resp.network_height << " (" << get_sync_percentage(resp.height, resp.network_height) << "%), "
+    << (resp.synced ? "synced, " : "syncing, ") << "on " << (m_core.currency().isTestnet() ? "testnet, " : "mainnet, ")
+    << "net hash " << get_mining_speed(resp.hashrate) << ", " 
+    << resp.outgoing_connections_count << "(out)+" << resp.incoming_connections_count << "(in) connections"
+    << std::endl;
+
   return true;
 }
-
+//--------------------------------------------------------------------------------
+float DaemonCommandsHandler::get_sync_percentage(uint64_t height, uint64_t target_height)
+{
+  // Code snippet from Monero Project
+  target_height = target_height ? target_height < height ? height : target_height : height;
+  float pc = 100.0f * height / target_height;
+  if (height < target_height && pc > 99.9f)
+    return 99.9f; // to avoid 100% when not fully synced
+  return pc;
+}
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::exit(const std::vector<std::string>& args) {
   m_consoleHandler.requestStop();
