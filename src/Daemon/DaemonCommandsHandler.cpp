@@ -6,6 +6,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <ctime>
+
 #include "DaemonCommandsHandler.h"
 
 #include "P2p/NetNode.h"
@@ -66,7 +68,6 @@ std::string DaemonCommandsHandler::get_commands_str()
 //--------------------------------------------------------------------------------
 std::string DaemonCommandsHandler::get_mining_speed(uint32_t hr)
 {
-  // Code snippet from Monero Project
   if (hr>1e9) return (boost::format("%.2f GH/s") % (hr/1e9)).str();
   if (hr>1e6) return (boost::format("%.2f MH/s") % (hr/1e6)).str();
   if (hr>1e3) return (boost::format("%.2f kH/s") % (hr/1e3)).str();
@@ -78,15 +79,19 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args)
   CryptoNote::COMMAND_RPC_GET_INFO::request req;
   CryptoNote::COMMAND_RPC_GET_INFO::response resp;
 
-  if (!m_prpc_server->on_get_info(req, resp)) {
-    return false;
+  if (!m_prpc_server->on_get_info(req, resp) || resp.status != CORE_RPC_STATUS_OK) {
+    std::cout << "Problem retreiving information from RPC server." << std::endl;
   }
+
+  std::time_t uptime = std::time(nullptr) - resp.start_time;
 
   std::cout 
     << "Height: " << resp.height << "/" << resp.network_height << " (" << get_sync_percentage(resp.height, resp.network_height) << "%), "
     << (resp.synced ? "synced, " : "syncing, ") << "on " << (m_core.currency().isTestnet() ? "testnet, " : "mainnet, ")
     << "net hash " << get_mining_speed(resp.hashrate) << ", " 
-    << resp.outgoing_connections_count << "(out)+" << resp.incoming_connections_count << "(in) connections"
+    << resp.outgoing_connections_count << "(out)+" << resp.incoming_connections_count << "(in) connections, "
+    << "uptime " << (unsigned int)floor(uptime / 60.0 / 60.0 / 24.0) << "d " << (unsigned int)floor(fmod((uptime / 60.0 / 60.0), 24.0)) << "h "
+    << (unsigned int)floor(fmod((uptime / 60.0), 60.0)) << "m " << (unsigned int)fmod(uptime, 60.0) << "s"
     << std::endl;
 
   return true;
@@ -94,7 +99,6 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args)
 //--------------------------------------------------------------------------------
 float DaemonCommandsHandler::get_sync_percentage(uint64_t height, uint64_t target_height)
 {
-  // Code snippet from Monero Project
   target_height = target_height ? target_height < height ? height : target_height : height;
   float pc = 100.0f * height / target_height;
   if (height < target_height && pc > 99.9f)

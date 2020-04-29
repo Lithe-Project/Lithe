@@ -276,6 +276,7 @@ struct COMMAND_RPC_GET_INFO {
     uint32_t network_height;
     uint32_t hashrate;
     bool synced;
+    uint64_t start_time;
     uint64_t full_deposit_amount;
     uint64_t last_block_reward;
     uint64_t last_block_timestamp;

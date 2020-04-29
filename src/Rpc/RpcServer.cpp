@@ -396,6 +396,7 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   Crypto::Hash last_block_hash = m_core.getBlockIdByHeight(m_core.get_current_blockchain_height() - 1);
   res.top_block_hash = Common::podToHex(last_block_hash);
   res.version = PROJECT_VERSION;
+  res.start_time = m_core.getStartTime();
 
   Block blk;
   if (!m_core.getBlockByHash(last_block_hash, blk)) {
