@@ -86,7 +86,7 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args)
   std::time_t uptime = std::time(nullptr) - resp.start_time;
 
   std::cout 
-    << "Height: " << resp.height << "/" << resp.network_height << " (" << get_sync_percentage(resp.height, resp.network_height) << "%), "
+    << "Height: " << resp.height << "/" << resp.last_known_block_index << " (" << get_sync_percentage(resp.height, resp.last_known_block_index) << "%), "
     << (resp.synced ? "synced, " : "syncing, ") << "on " << (m_core.currency().isTestnet() ? "testnet, " : "mainnet, ")
     << "net hash " << get_mining_speed(resp.hashrate) << ", " 
     << resp.outgoing_connections_count << "(out)+" << resp.incoming_connections_count << "(in) connections, "

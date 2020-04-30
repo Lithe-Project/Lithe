@@ -725,6 +725,14 @@ void core::poolUpdated() {
   m_observerManager.notify(&ICoreObserver::poolUpdated);
 }
 
+uint32_t core::getDaemonHeight() {
+  /* the daemon gets its height from its own known blocks */
+  LockedBlockchainStorage lbs(m_blockchain);
+  uint32_t currentHeight = lbs->getCurrentBlockchainHeight();
+
+  return currentHeight;
+}
+
 bool core::queryBlocks(const std::vector<Crypto::Hash>& knownBlockIds, uint64_t timestamp,
   uint32_t& resStartHeight, uint32_t& resCurrentHeight, uint32_t& resFullOffset, std::vector<BlockFullInfo>& entries) {
 

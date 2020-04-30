@@ -155,6 +155,7 @@ namespace CryptoNote {
      uint64_t depositInterestAtHeight(size_t height) const;
 
      bool is_key_image_spent(const Crypto::KeyImage& key_im);
+     uint32_t getDaemonHeight();
 
    private:
      bool add_new_tx(const Transaction& tx, const Crypto::Hash& tx_hash, size_t blob_size, tx_verification_context& tvc, bool keeped_by_block, uint32_t height);

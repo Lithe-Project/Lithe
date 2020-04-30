@@ -51,7 +51,6 @@ CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency &currency, S
   m_synchronized(false),
   m_stop(false),
   m_observedHeight(0),
-  m_blockchainHeight(0),
   m_peersCount(0),
   logger(log, "protocol") {
 
@@ -844,14 +843,6 @@ void CryptoNoteProtocolHandler::updateObservedHeight(uint32_t peerHeight, const 
     }
   }
 
-  {
-    std::lock_guard<std::mutex> lock(m_blockchainHeightMutex);
-    if (peerHeight > m_blockchainHeight) {
-      m_blockchainHeight = peerHeight;
-      logger(Logging::INFO, Logging::BRIGHT_GREEN) << "New Top Block Detected: " << peerHeight; 
-    }
-  }
-
   if (updated)
   {
     logger(TRACE) << "Observed height updated: " << m_observedHeight;
@@ -882,13 +873,9 @@ void CryptoNoteProtocolHandler::recalculateMaxObservedHeight(const CryptoNoteCon
 
 uint32_t CryptoNoteProtocolHandler::getObservedHeight() const
 {
+  uint32_t getDaemonHeight();
   std::lock_guard<std::mutex> lock(m_observedHeightMutex);
   return m_observedHeight;
-};
-
-uint32_t CryptoNoteProtocolHandler::getBlockchainHeight() const {
-  std::lock_guard<std::mutex> lock(m_blockchainHeightMutex);
-  return m_blockchainHeight;  
 };
 
 bool CryptoNoteProtocolHandler::addObserver(ICryptoNoteProtocolObserver *observer)
