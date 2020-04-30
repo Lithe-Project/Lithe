@@ -86,7 +86,7 @@ void chacha8(size_t doubleRounds, const void* data, size_t length, const uint8_t
     x13 = j13;
     x14 = j14;
     x15 = j15;
-    for (i = 0; i < doubleRounds; i++) {
+    for (i = 0; i < (int)doubleRounds; i++) {
       QUARTERROUND( x0, x4, x8,x12)
       QUARTERROUND( x1, x5, x9,x13)
       QUARTERROUND( x2, x6,x10,x14)
