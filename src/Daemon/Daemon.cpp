@@ -246,7 +246,6 @@ int main(int argc, char* argv[]) {
 
     cprotocol.set_p2p_endpoint(&p2psrv);
     ccore.set_cryptonote_protocol(&cprotocol);
-    DaemonCommandsHandler dch(ccore, p2psrv, logManager, &rpcServer);
 
     // initialize objects
     /* tell the log */
@@ -280,11 +279,6 @@ int main(int argc, char* argv[]) {
     logger(DEBUGGING) << "Core initialized OK";
     /* now the user */
     std::cout << BrightGreenMsg("Core is active.") << std::endl;
-
-    // start components
-    if (!command_line::has_arg(vm, arg_console)) {
-      dch.start_handling();
-    }
 
     /* tell the log */
     logger(DEBUGGING) << "Starting core rpc server on address " << rpcConfig.getBindAddress();
@@ -328,7 +322,14 @@ int main(int argc, char* argv[]) {
     logger(DEBUGGING) << "Core rpc server started ok";
     /* now the user */
     std::cout << BrightGreenMsg("Core RPC Server started on: ") << BrightMagentaMsg(rpcConfig.getBindAddress()) << std::endl;
-    
+
+    DaemonCommandsHandler dch(ccore, p2psrv, logManager, &rpcServer);
+
+    // start components
+    if (!command_line::has_arg(vm, arg_console)) {
+      dch.start_handling();
+    }
+
     Tools::SignalHandler::install([&dch, &p2psrv] {
       dch.stop_handling();
       p2psrv.sendStopSignal();

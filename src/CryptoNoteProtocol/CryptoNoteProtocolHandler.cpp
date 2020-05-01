@@ -164,6 +164,12 @@ std::vector<std::string> CryptoNoteProtocolHandler::all_connections()
   return connections;
 }
 
+uint32_t CryptoNoteProtocolHandler::getBlockchainHeight() {
+  CORE_SYNC_DATA hshd;
+  uint32_t currentChainHeight = hshd.current_height;
+  return currentChainHeight;  
+}
+
 uint32_t CryptoNoteProtocolHandler::get_current_blockchain_height()
 {
   uint32_t height;
@@ -873,7 +879,7 @@ void CryptoNoteProtocolHandler::recalculateMaxObservedHeight(const CryptoNoteCon
 
 uint32_t CryptoNoteProtocolHandler::getObservedHeight() const
 {
-  uint32_t getDaemonHeight();
+  uint32_t getBlockchainHeight();
   std::lock_guard<std::mutex> lock(m_observedHeightMutex);
   return m_observedHeight;
 };

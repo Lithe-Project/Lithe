@@ -97,13 +97,28 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args)
   return true;
 }
 //--------------------------------------------------------------------------------
-float DaemonCommandsHandler::get_sync_percentage(uint64_t height, uint64_t target_height)
-{
-  target_height = target_height ? target_height < height ? height : target_height : height;
-  float pc = 100.0f * height / target_height;
-  if (height < target_height && pc > 99.9f)
-    return 99.9f; // to avoid 100% when not fully synced
-  return pc;
+std::string DaemonCommandsHandler::get_sync_percentage(uint64_t height, uint64_t target_height) {
+  /* Don't divide by zero */
+  if (height == 0 || target_height == 0) {
+    return "0.00";
+  }
+
+  /* So we don't have > 100% */
+  if (height > target_height) {
+    height = target_height;
+  }
+
+  float percent = 100.0f * height / target_height;
+
+  if (height < target_height && percent > 99.99f) {
+    percent = 99.99f; // to avoid 100% when not fully synced
+  }
+
+  std::stringstream stream;
+
+  stream << std::setprecision(2) << std::fixed << percent;
+
+  return stream.str();
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::exit(const std::vector<std::string>& args) {
@@ -167,7 +182,7 @@ bool DaemonCommandsHandler::print_bc(const std::vector<std::string> &args) {
 
   uint32_t start_index = 0;
   uint32_t end_index = 0;
-  uint32_t end_block_parametr = m_core.get_current_blockchain_height();
+  uint32_t end_block_parametr = m_core.getDaemonHeight();
   if (!Common::fromString(args[0], start_index)) {
     std::cout << "wrong starter block index parameter" << ENDL;
     return false;
@@ -297,7 +312,7 @@ uint64_t DaemonCommandsHandler::calculatePercent(const CryptoNote::Currency& cur
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_stat(const std::vector<std::string>& args) {
   uint32_t height = 0;
-  uint32_t maxHeight = m_core.get_current_blockchain_height() - 1;
+  uint32_t maxHeight = m_core.getDaemonHeight() - 1;
   if (args.empty()) {
     height = maxHeight;
   } else {
