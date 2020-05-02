@@ -251,7 +251,7 @@ int main(int argc, char* argv[]) {
     /* tell the log */
     logger(DEBUGGING) << "Initializing p2p server...";
     /* now the user */
-    std::cout << YellowMsg("Starting P2P Server...") << std::endl;
+    std::cout << GreenMsg("Starting P2P Server...") << std::endl;
 
     if (!p2psrv.init(netNodeConfig)) {
       logger(ERROR, BRIGHT_RED) << "Failed to initialize p2p server.";
@@ -267,7 +267,7 @@ int main(int argc, char* argv[]) {
     /* tell the log */
     logger(DEBUGGING) << "Initializing core...";
     /* now the user */
-    std::cout << YellowMsg("Starting Core...") << std::endl;
+    std::cout << GreenMsg("Starting Core...") << std::endl;
 
     if (!ccore.init(coreConfig, minerConfig, true)) {
       /* tell the user and the log */

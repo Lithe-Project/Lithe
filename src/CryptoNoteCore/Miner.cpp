@@ -259,7 +259,7 @@ namespace CryptoNote
 
     m_threads.clear();
     logger(DEBUGGING) << "Mining has been stopped, " << m_threads.size() << " finished" ;
-    std::cout << YellowMsg("Mining has been stopped.") << std::endl;
+    std::cout << GreenMsg("Mining has now stopped.") << std::endl;
     return true;
   }
   //-----------------------------------------------------------------------------------------------------

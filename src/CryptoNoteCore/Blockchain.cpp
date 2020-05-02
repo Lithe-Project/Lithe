@@ -469,7 +469,7 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
 
   if (m_blocks.empty()) {
     logger(DEBUGGING) << "Blockchain not loaded, generating genesis block.";
-    std::cout << GreenMsg("Blockchain not loaded, generating genesis block.")
+    std::cout << MagentaMsg("Blockchain not loaded, generating genesis block.")
               << std::endl;
 
     block_verification_context bvc = boost::value_initialized<block_verification_context>();
@@ -523,7 +523,7 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
     << Common::timeIntervalToString(timestamp_diff)
     << " time ago, current difficulty: " << getDifficultyForNextBlock();
 
-  std::cout << BrightGreenMsg("Blockchain initialized.") << std::endl
+  std::cout << BrightGreenMsg("Blockchain initialized.") << std::endl << std::endl
             << BrightGreenMsg("Last Block: ")
             << BrightMagentaMsg(std::to_string(m_blocks.size() - 1)) << std::endl
             << BrightGreenMsg("Time: ")

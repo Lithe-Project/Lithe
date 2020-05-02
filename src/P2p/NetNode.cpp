@@ -68,7 +68,7 @@ void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
   /* tell the log */
   logger(DEBUGGING) <<  "Attempting to add IGD port mapping.";
   /* now the user */
-  std::cout << YellowMsg("Attempting to add IGD Port Mapping.") << std::endl;
+  std::cout << GreenMsg("Attempting to add IGD Port Mapping...") << std::endl;
 
   int result;
   UPNPDev* deviceList = upnpDiscover(1000, NULL, NULL, 0, 0, &result);
@@ -126,7 +126,7 @@ namespace CryptoNote
 {
   namespace
   {
-    const command_line::arg_descriptor<std::string> arg_p2p_bind_ip        = {"p2p-bind-ip", "Interface for p2p network protocol", "0.0.0.0"};
+    const command_line::arg_descriptor<std::string> arg_p2p_bind_ip        = {"p2p-bind-ip", "Interface for p2p network protocol", "127.0.0.1"};
     const command_line::arg_descriptor<std::string> arg_p2p_bind_port      = {"p2p-bind-port", "Port for p2p network protocol", std::to_string(CryptoNote::P2P_DEFAULT_PORT)};
     const command_line::arg_descriptor<uint32_t>    arg_p2p_external_port  = {"p2p-external-port", "External port for p2p network protocol (if port forwarding used with NAT)", 0};
     const command_line::arg_descriptor<bool>        arg_p2p_allow_local_ip = {"allow-local-ip", "Allow local ip add to peer list, mostly in debug purposes"};
@@ -495,7 +495,7 @@ namespace CryptoNote
     /* tell the log */
     logger(DEBUGGING) <<  "Binding on " << m_bind_ip << ":" << m_port;
     /* now the user */
-    std::cout << BrightGreenMsg("Binding on: ")
+    std::cout << GreenMsg("Binding on: ")
               << BrightMagentaMsg(m_bind_ip) 
               << BrightMagentaMsg(":")
               << BrightMagentaMsg(m_port) << std::endl;
