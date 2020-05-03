@@ -138,11 +138,11 @@ namespace CryptoNote
           update_blockchain_height();
           m_blockchain_height = (std::max)(m_blockchain_height, height);
         }
-        /*
+
         if (std::chrono::milliseconds(1) < current_time - m_print_time || force) {
           std::cout << "Height " << height << " of " << m_blockchain_height << '\r';
           m_print_time = current_time;
-        } */
+        }
       }
 
     private:

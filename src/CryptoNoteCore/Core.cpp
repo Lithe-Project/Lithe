@@ -2,7 +2,7 @@
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2019-2020 The Lithe Project Development Team
-//
+
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -115,7 +115,6 @@ bool core::get_blocks(uint32_t start_offset, uint32_t count, std::list<Block>& b
   return m_blockchain.getBlocks(start_offset, count, blocks, txs);
 }
 
-
 bool core::get_blocks(uint32_t start_offset, uint32_t count, std::list<Block>& blocks) {
   return m_blockchain.getBlocks(start_offset, count, blocks);
 }
@@ -218,7 +217,9 @@ bool core::handle_incoming_tx(const BinaryArray& tx_blob, tx_verification_contex
   //want to process all transactions sequentially
 
   if (tx_blob.size() > m_currency.maxTxSize()) {
-    logger(INFO, RED) << "- Core.cpp - " << "WRONG TRANSACTION BLOB, too big size " << tx_blob.size() << "<< Core.cpp << " << ", rejected";
+    logger(DEBUGGING) << "- Core.cpp - " << "WRONG TRANSACTION BLOB, too big size " << tx_blob.size() << "<< Core.cpp << " << ", rejected";
+    std::cout << BrightRedMsg("Wrong Transaction Blob. The size is too big so it was rejected.")
+              << BrightYellowMsg("(") << BrightYellowMsg(std::to_string(tx_blob.size())) << BrightYellowMsg(")") << std::endl;
     tvc.m_verification_failed = true;
     return false;
   }
@@ -228,7 +229,8 @@ bool core::handle_incoming_tx(const BinaryArray& tx_blob, tx_verification_contex
   Transaction tx;
 
   if (!parse_tx_from_blob(tx, tx_hash, tx_prefixt_hash, tx_blob)) {
-    logger(INFO, RED) << "- Core.cpp - " << "WRONG TRANSACTION BLOB, Failed to parse, rejected";
+    logger(DEBUGGING) << "WRONG TRANSACTION BLOB, Failed to parse, rejected";
+    std::cout << BrightRedMsg("Wrong Transaction Blob. Failed to parse so it was rejected.") << std::endl;
     tvc.m_verification_failed = true;
     return false;
   }
@@ -540,14 +542,17 @@ void core::getPoolChanges(const std::vector<Crypto::Hash>& knownTxsIds, std::vec
 
 bool core::handle_incoming_block_blob(const BinaryArray& block_blob, block_verification_context& bvc, bool control_miner, bool relay_block) {
   if (block_blob.size() > m_currency.maxBlockBlobSize()) {
-    logger(INFO, RED) << "- Core.cpp - " << "WRONG BLOCK BLOB, too big size " << block_blob.size() << "<< Core.cpp << " << ", rejected";
+    logger(DEBUGGING) << "WRONG BLOCK BLOB, too big size " << block_blob.size() << ", rejected";
+    std::cout << BrightRedMsg("Wrong Block Blob. The size is too big so it was rejected.")
+              << BrightYellowMsg("(") << BrightYellowMsg(std::to_string(block_blob.size())) << BrightYellowMsg(")") << std::endl;
     bvc.m_verification_failed = true;
     return false;
   }
 
   Block b;
   if (!fromBinaryArray(b, block_blob)) {
-    logger(INFO, RED) << "- Core.cpp - " << "Failed to parse and validate new block";
+    logger(DEBUGGING) << "- Core.cpp - " << "Failed to parse and validate new block";
+    std::cout << BrightRedMsg("Failed to parse and validate the new block.") << std::endl;
     bvc.m_verification_failed = true;
     return false;
   }
@@ -571,11 +576,14 @@ bool core::handle_incoming_block(const Block& b, block_verification_context& bvc
     std::list<Transaction> txs;
     m_blockchain.getTransactions(b.transactionHashes, txs, missed_txs);
     if (!missed_txs.empty() && getBlockIdByHeight(get_block_height(b)) != get_block_hash(b)) {
-      logger(INFO, RED) << "- Core.cpp - " << "Block added, but it seems that reorganize just happened after that, do not relay this block";
+      logger(DEBUGGING) << "Block added, but it seems that reorganize just happened after that, do not relay this block";
+      std::cout << BrightRedMsg("Block added but it seems that a reorganize has just happened") << std::endl
+                << BrightRedMsg(" after that. Please do not relay this block.") << std::endl;
     } else {
       if (!(txs.size() == b.transactionHashes.size() && missed_txs.empty())) {
-        logger(ERROR, BRIGHT_RED) << "- Core.cpp - " << "can't find some transactions in found block:" <<
-          get_block_hash(b) << "- Core.cpp - " << " txs.size()=" << txs.size() << "- Core.cpp - " << ", b.transactionHashes.size()=" << b.transactionHashes.size() << "- Core.cpp - " << ", missed_txs.size()" << missed_txs.size(); return false;
+        logger(ERROR, BRIGHT_RED) << "can't find some transactions in found block:" << get_block_hash(b)
+                                  << " txs.size()=" << txs.size() << ", b.transactionHashes.size()=" << b.transactionHashes.size() << ", missed_txs.size()" << missed_txs.size(); return false;
+      
       }
 
       NOTIFY_NEW_BLOCK::request arg;
@@ -1035,13 +1043,15 @@ uint64_t core::depositInterestAtHeight(size_t height) const {
 
 bool core::handleIncomingTransaction(const Transaction& tx, const Crypto::Hash& txHash, size_t blobSize, tx_verification_context& tvc, bool keptByBlock, uint32_t height) {
   if (!check_tx_syntax(tx)) {
-    logger(INFO, RED) << "- Core.cpp - " << "WRONG TRANSACTION BLOB, Failed to check tx " << txHash << " syntax, rejected";
+    logger(DEBUGGING) << "WRONG TRANSACTION BLOB, Failed to check tx " << txHash << " syntax, rejected";
+    std::cout << BrightRedMsg("Wrong Transaction Blob.\nFailed to check the transaction syntax of ") << txHash << BrightRedMsg(" so it was rejected.") << std::endl;
     tvc.m_verification_failed = true;
     return false;
   }
 
   if (!check_tx_semantic(tx, keptByBlock, height)) {
-    logger(INFO, RED) << "- Core.cpp - " << "WRONG TRANSACTION BLOB, Failed to check tx " << txHash << " semantic, rejected";
+    logger(DEBUGGING) << "WRONG TRANSACTION BLOB, Failed to check tx " << txHash << " semantic, rejected";
+    std::cout << BrightRedMsg("Wrong Transaction Blob.\nFailed to check the transaction semantic of ") << txHash << BrightRedMsg(" so it was rejected.") << std::endl;
     tvc.m_verification_failed = true;
     return false;
   }
@@ -1049,9 +1059,10 @@ bool core::handleIncomingTransaction(const Transaction& tx, const Crypto::Hash& 
   bool r = add_new_tx(tx, txHash, blobSize, tvc, keptByBlock, height);
   if (tvc.m_verification_failed) {
     if (!tvc.m_tx_fee_too_small) {
-      logger(ERROR) << "- Core.cpp - " << "Transaction verification failed: " << txHash;
+      logger(ERROR) << "Transaction verification failed: " << txHash;
     } else {
-      logger(INFO, RED) << "- Core.cpp - " << "Transaction verification failed: " << txHash;
+      logger(DEBUGGING) << "Transaction verification failed: " << txHash;
+      std::cout << BrightRedMsg("Transaction verification failed for ") << txHash << std::endl;
     }
   } else if (tvc.m_verification_impossible) {
     logger(ERROR) << "- Core.cpp - " << "Transaction verification impossible: " << txHash;

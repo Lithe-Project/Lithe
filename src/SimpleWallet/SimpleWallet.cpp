@@ -159,7 +159,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
   }
 
   if (walletExists) {
-    logger(INFO, GREEN) << "Loading wallet...";
+    std::cout << GreenMsg("Loading Wallet...") << std::endl;
     std::ifstream walletFile;
     walletFile.open(walletFileName, std::ios_base::binary | std::ios_base::in);
     if (walletFile.fail()) {
@@ -181,7 +181,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
           throw std::runtime_error("failed to load wallet: " + initError.message());
         }
 
-        logger(INFO, GREEN) << "Storing wallet...";
+        std::cout << GreenMsg("Storing Wallet...") << std::endl;
 
         try {
           CryptoNote::WalletHelper::storeWallet(*wallet, walletFileName);
@@ -190,7 +190,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
           throw std::runtime_error("error saving wallet file '" + walletFileName + "'");
         }
 
-        logger(INFO, BRIGHT_GREEN) << "Stored ok";
+        std::cout << BrightGreenMsg("Successfully stored.") << std::endl;
         return walletFileName;
       } else { // no keys, wallet error loading
         throw std::runtime_error("can't load wallet file '" + walletFileName + "', check password");
@@ -215,7 +215,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
       throw std::runtime_error("failed to load wallet: " + initError.message());
     }
 
-    logger(INFO, GREEN) << "Storing wallet...";
+    std::cout << GreenMsg("Storing Wallet...") << std::endl;
 
     try {
       CryptoNote::WalletHelper::storeWallet(*wallet, walletFileName);
@@ -224,7 +224,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
       throw std::runtime_error("error saving wallet file '" + walletFileName + "'");
     }
 
-    logger(INFO, BRIGHT_GREEN) << "Stored ok";
+    std::cout << BrightGreenMsg("Successfully stored.") << std::endl;
     return walletFileName;
   } else { //no wallet no keys
     throw std::runtime_error("wallet file '" + walletFileName + "' is not found");
@@ -255,8 +255,8 @@ void printListTransfersHeader(LoggerRef& logger) {
   header += makeCenteredString(BLOCK_MAX_WIDTH, "block") + "  ";
   header += makeCenteredString(UNLOCK_TIME_MAX_WIDTH, "unlock time");
 
-  logger(INFO, BRIGHT_MAGENTA) << header;
-  logger(INFO, BRIGHT_MAGENTA) << std::string(header.size(), '-');
+  std::cout << BrightMagentaMsg(header) << std::endl;
+  std::cout << BrightMagentaMsg(std::string(header.size(), '-')) << std::endl;
 }
 
 void printListTransfersItem(LoggerRef& logger, const WalletLegacyTransaction& txInfo, IWalletLegacy& wallet, const Currency& currency) {
@@ -271,31 +271,40 @@ void printListTransfersItem(LoggerRef& logger, const WalletLegacyTransaction& tx
     throw std::runtime_error("time buffer is too small");
   }
 
-  std::string rowColor = txInfo.totalAmount < 0 ? MAGENTA : GREEN;
-  logger(INFO, rowColor)
-    << std::setw(TIMESTAMP_MAX_WIDTH) << timeString
-    << "  " << std::setw(HASH_MAX_WIDTH) << Common::podToHex(txInfo.hash)
-    << "  " << std::setw(TOTAL_AMOUNT_MAX_WIDTH) << currency.formatAmount(txInfo.totalAmount)
-    << "  " << std::setw(FEE_MAX_WIDTH) << currency.formatAmount(txInfo.fee)
-    << "  " << std::setw(BLOCK_MAX_WIDTH) << txInfo.blockHeight
-    << "  " << std::setw(UNLOCK_TIME_MAX_WIDTH) << txInfo.unlockTime;
-
-  if (!paymentIdStr.empty()) {
-    logger(INFO, rowColor) << "payment ID: " << paymentIdStr;
-  }
-
   if (txInfo.totalAmount < 0) {
+    std::cout << std::setw(TIMESTAMP_MAX_WIDTH) << BrightMagentaMsg(timeString) << std::endl
+              << "  " << std::setw(HASH_MAX_WIDTH) << YellowMsg(Common::podToHex(txInfo.hash)) << std::endl
+              << "  " << std::setw(TOTAL_AMOUNT_MAX_WIDTH) << YellowMsg(currency.formatAmount(txInfo.totalAmount)) << std::endl
+              << "  " << std::setw(FEE_MAX_WIDTH) << YellowMsg(currency.formatAmount(txInfo.fee)) << std::endl
+              << "  " << std::setw(BLOCK_MAX_WIDTH) << YellowMsg(std::to_string(txInfo.blockHeight)) << std::endl
+              << "  " << std::setw(UNLOCK_TIME_MAX_WIDTH) << YellowMsg(std::to_string(txInfo.unlockTime)) << std::endl;
+    
+    if (!paymentIdStr.empty()) {
+      std::cout << YellowMsg("Payment ID: ") << YellowMsg(paymentIdStr) << std::endl;
+    }
+
     if (txInfo.transferCount > 0) {
-      logger(INFO, rowColor) << "transfers:";
+      std::cout << YellowMsg("Transfers:") << std::endl;
       for (TransferId id = txInfo.firstTransferId; id < txInfo.firstTransferId + txInfo.transferCount; ++id) {
         WalletLegacyTransfer tr;
         wallet.getTransfer(id, tr);
-        logger(INFO, rowColor) << tr.address << "  " << std::setw(TOTAL_AMOUNT_MAX_WIDTH) << currency.formatAmount(tr.amount);
+        std::cout << YellowMsg(tr.address) << YellowMsg("  ") << std::setw(TOTAL_AMOUNT_MAX_WIDTH) << YellowMsg(currency.formatAmount(tr.amount)) << std::endl;
       }
+    }
+  } else if (txInfo.totalAmount > 0) {
+    std::cout << std::setw(TIMESTAMP_MAX_WIDTH) << BrightMagentaMsg(timeString) << std::endl
+              << "  " << std::setw(HASH_MAX_WIDTH) << GreenMsg(Common::podToHex(txInfo.hash)) << std::endl
+              << "  " << std::setw(TOTAL_AMOUNT_MAX_WIDTH) << GreenMsg(currency.formatAmount(txInfo.totalAmount)) << std::endl
+              << "  " << std::setw(FEE_MAX_WIDTH) << GreenMsg(currency.formatAmount(txInfo.fee)) << std::endl
+              << "  " << std::setw(BLOCK_MAX_WIDTH) << GreenMsg(std::to_string(txInfo.blockHeight)) << std::endl
+              << "  " << std::setw(UNLOCK_TIME_MAX_WIDTH) << GreenMsg(std::to_string(txInfo.unlockTime)) << std::endl;
+    
+    if (!paymentIdStr.empty()) {
+      std::cout << GreenMsg("Payment ID: ") << GreenMsg(paymentIdStr) << std::endl;
     }
   }
 
-  logger(INFO, rowColor) << " "; //just to make logger print one endline
+  std::cout << std::endl; /* just to make logger print one endline */
 }
 
 std::string prepareWalletAddressFilename(const std::string& walletBaseName) {
@@ -444,7 +453,7 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
 /* This function shows the number of outputs in the wallet
   that are below the dust threshold */
 bool simple_wallet::show_dust(const std::vector<std::string>& args) {
-  logger(INFO, BRIGHT_WHITE) << "Dust outputs: " << m_wallet->dustBalance() << std::endl;
+  std::cout << YellowMsg("Dust outputs: ") << YellowMsg(std::to_string(m_wallet->dustBalance())) << std::endl;
 	return true;
 }
 
@@ -494,10 +503,9 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
       return false;
     }
     remote_fee_address = getFeeAddress();
-    logger(INFO, BRIGHT_WHITE) << "Connected to remote node: " << m_daemon_host;
-    if (!remote_fee_address.empty()) 
-    {
-      logger(INFO, BRIGHT_WHITE) << "Fee address: " << remote_fee_address;
+    std::cout << BrightGreenMsg("Connected to Remote Node: ") << BrightMagentaMsg(m_daemon_host) << std::endl;
+    if (!remote_fee_address.empty()) {
+      std::cout << GreenMsg("Fee Address: ") << MagentaMsg(remote_fee_address) << std::endl;
     }    
   } 
   else 
@@ -505,10 +513,10 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
     if (!m_daemon_host.empty()) 
       remote_fee_address = getFeeAddress();
 		m_daemon_address = std::string("http://") + m_daemon_host + ":" + std::to_string(m_daemon_port);
-    logger(INFO, BRIGHT_WHITE) << "Connected to remote node: " << m_daemon_host;
+    std::cout << BrightGreenMsg("Connected to Remote Node: ") << BrightMagentaMsg(m_daemon_host) << std::endl;
     if (!remote_fee_address.empty()) 
     {
-      logger(INFO, BRIGHT_WHITE) << "Fee address: " << remote_fee_address;
+      std::cout << GreenMsg("Fee Address: ") << MagentaMsg(remote_fee_address) << std::endl;
     }   
   }
 
@@ -702,8 +710,8 @@ if (key_import) {
     m_wallet->addObserver(this);
     m_node->addObserver(static_cast<INodeObserver*>(this));
 
-    logger(INFO, BRIGHT_WHITE) << "Opened wallet: " << m_wallet->getAddress();
-    logger(INFO, YELLOW) << "Use \"help\" command to see the list of available commands.\n";
+    std::cout << BrightGreenMsg("Opened Wallet: ") << BrightMagentaMsg(m_wallet->getAddress()) << std::endl;
+    std::cout << YellowMsg("Use \"help\" command to see the list of available commands.\n") << std::endl;
   }
 
   return true;
@@ -890,8 +898,7 @@ bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey 
                   AccountKeys keys;
                   m_wallet->getAccountKeys(keys);
 
-                  logger(INFO, BRIGHT_WHITE) <<
-                    "Imported wallet: " << m_wallet->getAddress() << std::endl;
+                  std::cout << BrightGreenMsg("Imported Wallet: ") << BrightMagentaMsg(m_wallet->getAddress()) << std::endl;
                 }
                 catch (const std::exception& e) {
                   fail_msg_writer() << "failed to import wallet: " << e.what();
@@ -1034,7 +1041,7 @@ void simple_wallet::initCompleted(std::error_code result) {
 //----------------------------------------------------------------------------------------------------
 void simple_wallet::connectionStatusUpdated(bool connected) {
   if (connected) {
-    logger(INFO, GREEN) << "Wallet connected to daemon.";
+    std::cout << BrightGreenMsg("The Wallet is now connected with the Daemon.") << std::endl;
   } else {
     printConnectionError();
   }
@@ -1046,32 +1053,17 @@ void simple_wallet::externalTransactionCreated(CryptoNote::TransactionId transac
 
   /* this tells the wallet to show incoming+outgoing transactions live */
   if (txInfo.totalAmount >= 0) {
-    logger(DEBUGGING) <<
-      "height: " << txInfo.blockHeight << " transaction " << Common::podToHex(txInfo.hash) <<
-      ", received " << m_currency.formatAmount(txInfo.totalAmount);
-    
     std::cout << std::endl
               << BrightGreenMsg("New Transaction Found:") << std::endl
               << BrightGreenMsg("Height: ") << BrightMagentaMsg(std::to_string(txInfo.blockHeight)) << std::endl
               << BrightGreenMsg("Transaction: ") << BrightMagentaMsg(Common::podToHex(txInfo.hash)) << std::endl
               << BrightGreenMsg("Amount: ") << BrightMagentaMsg(m_currency.formatAmount(txInfo.totalAmount)) << std::endl;
   } else {
-    logger(DEBUGGING) <<
-      "height: " << txInfo.blockHeight << " transaction " << Common::podToHex(txInfo.hash) <<
-      ", spent " << m_currency.formatAmount(static_cast<uint64_t>(-txInfo.totalAmount));
-    
     std::cout << std::endl
               << BrightGreenMsg("Outgoing Transaction Found:") << std::endl
               << BrightGreenMsg("Height: ") << BrightMagentaMsg(std::to_string(txInfo.blockHeight)) << std::endl
               << BrightGreenMsg("Transaction: ") << BrightMagentaMsg(Common::podToHex(txInfo.hash)) << std::endl
               << BrightGreenMsg("Spent: ") << BrightMagentaMsg(m_currency.formatAmount(static_cast<uint64_t>(-txInfo.totalAmount))) << std::endl;
-  }
-
-  /* this calls void update(...) from simplewallet.h */
-  if (txInfo.blockHeight == WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT) {
-    m_refresh_progress_reporter.update(m_node->getLastLocalBlockHeight(), true);
-  } else {
-    m_refresh_progress_reporter.update(txInfo.blockHeight, true);
   }
 }
 //----------------------------------------------------------------------------------------------------
@@ -1088,11 +1080,7 @@ void simple_wallet::synchronizationProgressUpdated(uint32_t current, uint32_t to
   }
 }
 
-bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::vector<std::string>()*/) {
-  logger(DEBUGGING) << "available balance: " << m_currency.formatAmount(m_wallet->actualBalance()) <<
-    ", locked amount: " << m_currency.formatAmount(m_wallet->pendingBalance()) <<
-    ", total amount: " << m_currency.formatAmount(m_wallet->actualBalance() + m_wallet->pendingBalance());
-
+bool simple_wallet::show_balance(const std::vector<std::string>& args) {
   std::cout << std::endl
             << BrightGreenMsg("Available Balance: ") << BrightMagentaMsg(m_currency.formatAmount(m_wallet->actualBalance())) << std::endl
             << BrightGreenMsg("Locked Balance: ") << BrightMagentaMsg(m_currency.formatAmount(m_wallet->pendingBalance())) << std::endl
@@ -1216,7 +1204,24 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
   std::string secretKeysData = std::string(reinterpret_cast<char*>(&keys.spendSecretKey), sizeof(keys.spendSecretKey)) + std::string(reinterpret_cast<char*>(&keys.viewSecretKey), sizeof(keys.viewSecretKey));
   std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
 
-  logger(INFO, BRIGHT_GREEN) << std::endl << "lithe-wallet is an open-source, client-side, free wallet which allow you to send and receive $LXTH instantly on the blockchain. You are  in control of your funds & your keys. When you generate a new wallet, login, send, receive or deposit $LXTH everything happens locally. Your seed is never transmitted, received or stored. That's why its imperative to write, print or save your seed somewhere safe. The backup of keys is your responsibility. If you lose your seed, your account can not be recovered. The Lithe Projects Team doesn't take any responsibility for lost funds due to nonexistent/missing/lost private keys." << std::endl << std::endl;
+
+  std::cout << "" << std::endl
+            << BrightMagentaMsg("lithe-wallet is an open-source, client-side, free wallet which") << std::endl
+            << BrightMagentaMsg("allows you to send and receive $LXTH instantly on the blockchain.") << std::endl
+            << "" << std::endl
+            << "You are in control of your funds & your keys." << std::endl
+            << "" << std::endl
+            << "When you generate a new wallet, login, send, receive or deposit $LXTH - everything happens locally." << std::endl
+            << "" << std::endl
+            << "Your seed is never transmitted, received or stored - anywhere." << std::endl
+            << "That's why its imperative to write, print or save your seed somewhere safe." << std::endl
+            << "The backup of keys is YOUR responsibility." << std::endl
+            << "" << std::endl
+            << BrightRedMsg("If you lose your seed, your account can not be recovered.") << std::endl
+            << "" << std::endl
+            << BrightYellowMsg("The Lithe Projects Team doesn't take any responsibility for lost") << std::endl
+            << BrightYellowMsg("funds due to nonexistent/missing/lost private keys.") << std::endl
+            << "" << std::endl;
 
   std::cout << "Private spend key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
   std::cout << "Private view key: " <<  Common::podToHex(keys.viewSecretKey) << std::endl;
@@ -1243,9 +1248,9 @@ bool simple_wallet::show_incoming_transfers(const std::vector<std::string>& args
     m_wallet->getTransaction(trantransactionNumber, txInfo);
     if (txInfo.totalAmount < 0) continue;
     hasTransfers = true;
-    logger(INFO, YELLOW) << "        amount       \t                              tx id";
-    logger(INFO, GREEN) <<
-      std::setw(21) << m_currency.formatAmount(txInfo.totalAmount) << '\t' << Common::podToHex(txInfo.hash);
+    std::cout << BrightMagentaMsg("        amount       \t                              tx id") << std::endl;
+    std::cout << std::setw(21) << BrightGreenMsg(m_currency.formatAmount(txInfo.totalAmount)) << "\t"
+              << BrightGreenMsg(Common::podToHex(txInfo.hash)) << std::endl;
   }
 
   if (!hasTransfers) success_msg_writer() << "No incoming transfers";
@@ -1261,9 +1266,9 @@ bool simple_wallet::show_outgoing_transfers(const std::vector<std::string>& args
     m_wallet->getTransaction(trantransactionNumber, txInfo);
     if (txInfo.totalAmount > 0) continue;
     hasTransfers = true;
-    logger(INFO) << "        amount       \t                              tx id";
-    logger(INFO, MAGENTA) <<
-      std::setw(21) << m_currency.formatAmount(txInfo.totalAmount) << '\t' << Common::podToHex(txInfo.hash);
+    std::cout << BrightMagentaMsg("        amount       \t                              tx id") << std::endl;
+    std::cout << std::setw(21) << BrightYellowMsg(m_currency.formatAmount(txInfo.totalAmount)) << "\t"
+              << BrightYellowMsg(Common::podToHex(txInfo.hash)) << std::endl;
   }
 
   if (!hasTransfers) success_msg_writer() << "No outgoing transfers";
@@ -1341,9 +1346,13 @@ bool simple_wallet::show_payments(const std::vector<std::string> &args) {
       return paymentId;
     });
 
-    logger(INFO, YELLOW) << "                            payment                             \t" <<
-      "                          transaction                           \t" <<
-      "  height\t       amount        ";
+    //logger(DEBUGGING) << "                            payment                             \t" <<
+    //  "                          transaction                           \t" <<
+    //  "  height\t       amount        ";
+    /* next 3 lines havent been tested for layout, just going from above 3 lines */
+    std::cout << GreenMsg("                            payment                             \t") <<
+      GreenMsg("                          transaction                           \t") <<
+      GreenMsg("  height\t       amount        ") << std::endl;
 
     auto payments = m_wallet->getTransactionsByPaymentIds(paymentIds);
 
@@ -1828,7 +1837,7 @@ int main(int argc, char* argv[]) {
 
   logManager.configure(buildLoggerConfiguration(logLevel, Common::ReplaceExtenstion(argv[0], ".log")));
 
-  logger(INFO, BRIGHT_MAGENTA) << "Lithe Wallet v" << PROJECT_VERSION_LONG;
+  std::cout << MagentaMsg("Lithe Wallet v") << BrightMagentaMsg(PROJECT_VERSION_LONG) << std::endl;
 
   CryptoNote::Currency currency = CryptoNote::CurrencyBuilder(logManager).
     testnet(command_line::get_arg(vm, arg_testnet)).currency();
@@ -1884,11 +1893,10 @@ int main(int argc, char* argv[]) {
     try  {
       walletFileName = ::tryToOpenWalletOrLoadKeysOrThrow(logger, wallet, wallet_file, wallet_password);
 
-      /* @TODO: Test this */
-      logger(INFO, BRIGHT_GREEN) << "available balance: " << currency.formatAmount(wallet->actualBalance()) << ",";
-      logger(INFO, BRIGHT_RED) << "locked amount: " << currency.formatAmount(wallet->pendingBalance());
-
-      logger(INFO, BRIGHT_GREEN) << "Loaded ok";
+      std::cout << BrightGreenMsg("Successfully loaded wallet. Here are your balances:") << std::endl;
+      std::cout << GreenMsg("Avaliable Balance: ") << MagentaMsg(currency.formatAmount(wallet->actualBalance())) << std::endl
+                << YellowMsg("Locked Balance: ") << MagentaMsg(currency.formatAmount(wallet->pendingBalance())) << std::endl
+                << BrightGreenMsg("Total Balance: ") << BrightMagentaMsg(currency.formatAmount(wallet->actualBalance() + wallet->pendingBalance())) << std::endl;
     } catch (const std::exception& e)  {
       logger(ERROR, BRIGHT_RED) << "Wallet initialize failed: " << e.what();
       return 1;
@@ -1905,14 +1913,18 @@ int main(int argc, char* argv[]) {
       wrpc.send_stop_signal();
     });
 
-    logger(INFO, YELLOW) << "Starting wallet rpc server";
+    std::cout << GreenMsg("Starting Wallet RPC Server.") << std::endl;
+
     wrpc.run();
-    logger(INFO, YELLOW) << "Stopped wallet rpc server";
+
+    std::cout << GreenMsg("Wallet RPC Server has stopped.") << std::endl;
 
     try {
-      logger(INFO, GREEN) << "Storing wallet...";
+      std::cout << GreenMsg("Storing Wallet...") << std::endl;
+
       CryptoNote::WalletHelper::storeWallet(*wallet, walletFileName);
-      logger(INFO, BRIGHT_GREEN) << "Stored ok";
+
+      std::cout << BrightGreenMsg("Successfully stored the Wallet.") << std::endl;
     } catch (const std::exception& e) {
       logger(ERROR, BRIGHT_RED) << "Failed to store wallet: " << e.what();
       return 1;
@@ -1939,7 +1951,8 @@ int main(int argc, char* argv[]) {
     if (!wal.deinit()) {
       logger(ERROR, BRIGHT_RED) << "Failed to close wallet";
     } else {
-      logger(INFO, YELLOW) << "Wallet closed";
+      logger(TRACE) << "Wallet closed";
+      std::cout << GreenMsg("The Wallet has been closed.") << std::endl;
     }
   }
   return 1;

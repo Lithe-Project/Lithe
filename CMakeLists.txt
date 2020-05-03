@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8.6)
 
-set(VERSION "0.0.2")
-# Packaged from main commits
-set(COMMIT 72946d9)
+set(VERSION "0.0.3")
+# BUILD_ID = the next commit number to master branch
+set(BUILD_ID 29)
 set(REFS " (HEAD -> master)")
 
 set(CMAKE_CXX_STANDARD 11)
@@ -117,10 +117,10 @@ if (NOT COMMIT_ID_IN_VERSION)
   set(VERSION "${VERSION}-unknown")
   configure_file("src/version.h.in" "version/version.h")
   add_custom_target(version ALL)
-elseif(DEFINED COMMIT)
+elseif(DEFINED BUILD_ID)
   string(REPLACE "." "\\." VERSION_RE "${VERSION}")
   if(NOT REFS MATCHES "(\\(|, )tag: v${VERSION_RE}(\\)|, )")
-    set(VERSION "${VERSION}-g${COMMIT}")
+    set(VERSION "${VERSION}-g${BUILD_ID}")
   endif()
   configure_file("src/version.h.in" "version/version.h")
   add_custom_target(version ALL)

@@ -569,7 +569,7 @@ namespace CryptoNote
   }
   //-----------------------------------------------------------------------------------
 
-  bool NodeServer::deinit()  {
+  bool NodeServer::deinit() {
     return store_config();
   }
 
@@ -579,7 +579,8 @@ namespace CryptoNote
   {
     try {
       if (!Tools::create_directories_if_necessary(m_config_folder)) {
-        logger(INFO, RED) <<  "Failed to create data directory: " << m_config_folder;
+        logger(DEBUGGING) <<  "Failed to create data directory: " << m_config_folder;
+        std::cout << BrightRedMsg("Failed to create data directory at ") << BrightRedMsg(m_config_folder) << std::endl;
         return false;
       }
 
@@ -587,7 +588,8 @@ namespace CryptoNote
       std::ofstream p2p_data;
       p2p_data.open(state_file_path, std::ios_base::binary | std::ios_base::out | std::ios::trunc);
       if (p2p_data.fail())  {
-        logger(INFO, RED) <<  "Failed to save config to file " << state_file_path;
+        logger(DEBUGGING) <<  "Failed to save config to file " << state_file_path;
+        std::cout << BrightRedMsg("Failed to save config to file at ") << BrightRedMsg(state_file_path) << std::endl;
         return false;
       };
 
@@ -1272,13 +1274,17 @@ namespace CryptoNote
     std::list<PeerlistEntry> pl_wite;
     std::list<PeerlistEntry> pl_gray;
     m_peerlist.get_peerlist_full(pl_gray, pl_wite);
-    logger(INFO, GREEN) <<  ENDL << "Peerlist white:" << ENDL << print_peerlist_to_string(pl_wite) << ENDL << "Peerlist gray:" << ENDL << print_peerlist_to_string(pl_gray) ;
+    logger(DEBUGGING) <<  ENDL << "Peerlist white:" << ENDL << print_peerlist_to_string(pl_wite) << ENDL << "Peerlist gray:" << ENDL << print_peerlist_to_string(pl_gray);
+    std::cout << std::endl
+              << BrightGreenMsg("White Peerlist:") << std::endl << print_peerlist_to_string(pl_wite) << std::endl
+              << GreenMsg("Grey Peerlist:") << std::endl << print_peerlist_to_string(pl_gray) << std::endl;
     return true;
   }
   //-----------------------------------------------------------------------------------
 
   bool NodeServer::log_connections() {
-    logger(INFO, GREEN) <<  "Connections: \r\n" << print_connections_container() ;
+    logger(DEBUGGING) <<  "Connections: \r\n" << print_connections_container() ;
+    std::cout << BrightGreenMsg("Connections: \r") << std::endl << print_connections_container() << std::endl;
     return true;
   }
   //-----------------------------------------------------------------------------------

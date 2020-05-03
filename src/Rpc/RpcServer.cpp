@@ -16,6 +16,7 @@
 #include "BlockchainExplorerData.h"
 #include "Common/StringTools.h"
 #include "Common/Base58.h"
+#include "Common/ColouredMsg.h"
 #include "CryptoNoteCore/TransactionUtils.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
@@ -274,7 +275,8 @@ bool RpcServer::setViewKey(const std::string& view_key) {
   Crypto::Hash private_view_key_hash;
   size_t size;
   if (!Common::fromHex(view_key, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_view_key_hash)) {
-    logger(INFO, RED) << "- rpcserver.cpp - " << "Could not parse private view key";
+    logger(DEBUGGING) << "Could not parse private view key";
+    std::cout << RedMsg("Could not parse private view key.") << std::endl;
     return false;
   }
   m_view_key = *(struct Crypto::SecretKey *) &private_view_key_hash;
@@ -469,7 +471,8 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
   BinaryArray tx_blob;
   if (!fromHex(req.tx_as_hex, tx_blob))
   {
-    logger(INFO, RED) << "- rpcserver.cpp - " << "[on_send_raw_tx]: Failed to parse tx from hexbuff: " << req.tx_as_hex;
+    logger(DEBUGGING) << "[on_send_raw_tx]: Failed to parse tx from hexbuff: " << req.tx_as_hex;
+    std::cout << RedMsg("Failed to parse tx from hexbuff ") << RedMsg(req.tx_as_hex) << std::endl;
     res.status = "Failed";
     return true;
   }
@@ -480,7 +483,8 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
   tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
   if (!m_core.handle_incoming_tx(tx_blob, tvc, false))
   {
-    logger(INFO, RED) << "- rpcserver.cpp - " << "[on_send_raw_tx]: Failed to process tx";
+    logger(DEBUGGING) << "[on_send_raw_tx]: Failed to process tx";
+    std::cout << RedMsg("Failed to process transaction.") << std::endl;
     res.status = "Failed";
     return true;
   }
@@ -494,22 +498,11 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
 
   if (!tvc.m_should_be_relayed)
   {
-    logger(INFO, YELLOW) << "- rpcserver.cpp - " << "[on_send_raw_tx]: tx accepted, but not relayed";
+    logger(DEBUGGING) << "[on_send_raw_tx]: tx accepted, but not relayed";
+    std::cout << YellowMsg("Transaction accepted but it hasn't been relayed.") << std::endl;
     res.status = "Not relayed";
     return true;
   }
-
-  /* check tx for node fee
-
-  if (!m_fee_address.empty() && m_view_key != NULL_SECRET_KEY) {
-    if (!remotenode_check_incoming_tx(tx_blob)) {
-      logger(INFO) << "- rpcserver.cpp - " << "Transaction not relayed due to lack of remote node fee";		
-      res.status = "Not relayed due to lack of node fee";
-      return true;
-    }
-  }
-
-  */
 
   NOTIFY_NEW_TRANSACTIONS::request r;
   r.txs.push_back(asString(tx_blob));
@@ -533,35 +526,6 @@ bool RpcServer::on_start_mining(const COMMAND_RPC_START_MINING::request& req, CO
   res.status = CORE_RPC_STATUS_OK;
   return true;
 }
-
-/*
-
-bool RpcServer::remotenode_check_incoming_tx(const BinaryArray& tx_blob) {
-	Crypto::Hash tx_hash = NULL_HASH;
-	Crypto::Hash tx_prefixt_hash = NULL_HASH;
-	Transaction tx;
-	if (!parseAndValidateTransactionFromBinaryArray(tx_blob, tx, tx_hash, tx_prefixt_hash)) {
-		logger(INFO) << "<< rpcserver.cpp << " << "Could not parse tx from blob";
-		return false;
-	}
-	CryptoNote::TransactionPrefix transaction = *static_cast<const TransactionPrefix*>(&tx);
-
-	std::vector<uint32_t> out;
-	uint64_t amount;
-
-	if (!CryptoNote::findOutputsToAccount(transaction, m_fee_acc, m_view_key, out, amount)) {
-		logger(INFO) << "<< rpcserver.cpp << " << "Could not find outputs to remote node fee address";
-		return false;
-	}
-
-	if (amount != 0) {
-		logger(INFO) << "<< rpcserver.cpp << " << "Node received relayed transaction fee: " << m_core.currency().formatAmount(amount) << " KRB";
-		return true;
-	}
-	return false;
-}
-
-*/
 
 bool RpcServer::on_stop_mining(const COMMAND_RPC_STOP_MINING::request& req, COMMAND_RPC_STOP_MINING::response& res) {
   if (!m_core.get_miner().stop()) {

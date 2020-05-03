@@ -23,6 +23,7 @@
 #include "../CryptoNoteConfig.h"
 #include "Common/StringTools.h"
 #include "Common/DnsTools.h"
+#include "Common/ColouredMsg.h"
 
 using namespace Logging;
 
@@ -130,10 +131,12 @@ bool Checkpoints::load_checkpoints_from_dns()
     }
 
     if (!(0 == m_points.count(height))) {
-      logger(DEBUGGING) << "- Checkpoints.cpp - " << "Checkpoint already exists for height: " << height << ". Ignoring DNS checkpoint.";
+      logger(DEBUGGING) << "Checkpoint already exists for height: " << height << ". Ignoring DNS checkpoint.";
     } else {
       add_checkpoint(height, hash_str);
-	    logger(INFO, GREEN) << "- Checkpoints.cpp - " << "Added DNS checkpoint: " << height_str << ":" << hash_str;
+	    logger(DEBUGGING) << "Added DNS checkpoint: " << height_str << ":" << hash_str;
+      std::cout << BrightGreenMsg("Added DNS Checkpoint ")
+                << BrightMagentaMsg(height_str) << BrightMagentaMsg(":") << BrightMagentaMsg(hash_str) << std::endl;
     }
   }
 

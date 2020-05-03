@@ -20,6 +20,8 @@
 #include "CryptoNoteCore/VerificationContext.h"
 #include "P2p/LevinProtocol.h"
 
+#include "Common/ColouredMsg.h"
+
 using namespace Logging;
 using namespace Common;
 
@@ -148,7 +150,10 @@ void CryptoNoteProtocolHandler::log_connections()
        << std::setw(25) << get_protocol_state_string(cntxt.m_state)
        << std::setw(20) << std::to_string(time(NULL) - cntxt.m_started) << ENDL;
   });
-  logger(INFO, GREEN) << "Connections: " << ENDL << ss.str();
+  logger(DEBUGGING) << "Connections: " << ENDL << ss.str();
+  std::string ssInfo = ss.str();
+  std::cout << BrightGreenMsg("Connections: ") << std::endl
+            << BrightMagentaMsg(ssInfo) << std::endl << std::endl;
 }
 
 /* Get a list of daemons connected to this node */

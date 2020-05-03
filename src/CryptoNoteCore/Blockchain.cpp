@@ -1044,8 +1044,12 @@ bool Blockchain::prevalidate_miner_transaction(const Block& b, uint32_t height) 
   }
 
   if (boost::get<BaseInput>(b.baseTransaction.inputs[0]).blockIndex != height) {
-    logger(INFO, BRIGHT_RED) << "The miner transaction in block has invalid height: " <<
+    logger(DEBUGGING) << "The miner transaction in block has invalid height: " <<
       boost::get<BaseInput>(b.baseTransaction.inputs[0]).blockIndex << ", expected: " << height;
+    
+    std::cout << BrightRedMsg("The miner transaction in block has invalid height.") << std::endl
+              << BrightRedMsg("Height given: ") << boost::get<BaseInput>(b.baseTransaction.inputs[0]).blockIndex
+              << BrightRedMsg("Height expected: ") << GreenMsg(std::to_string(height)) << std::endl;
 
     return false;
   }
@@ -1060,12 +1064,16 @@ bool Blockchain::prevalidate_miner_transaction(const Block& b, uint32_t height) 
   }
 
   if (!check_outs_valid(b.baseTransaction)) {
-    logger(INFO, BRIGHT_RED) << "miner transaction have invalid outputs";
+    logger(DEBUGGING) << "miner transaction have invalid outputs";
+
+    std::cout << BrightRedMsg("Transaction has invalid outputs.") << std::endl;
     return false;
   }
 
   if (!check_outs_overflow(b.baseTransaction)) {
-    logger(INFO, BRIGHT_RED) << "miner transaction have money overflow in block " << get_block_hash(b);
+    logger(DEBUGGING) << "miner transaction have money overflow in block " << get_block_hash(b);
+
+    std::cout << BrightRedMsg("Transaction has money overflow in block ") << get_block_hash(b) << std::endl;
     return false;
   }
 
@@ -1254,9 +1262,13 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
 
     //check timestamp correct
     if (!check_block_timestamp(timestamps, b)) {
-      logger(INFO, BRIGHT_RED) <<
+      logger(DEBUGGING) <<
         "Block with id: " << id
         << ENDL << " for alternative chain, have invalid timestamp: " << b.timestamp;
+
+      std::cout << BrightRedMsg("Block with ID: ") << id << std::endl
+                << BrightRedMsg(" for alternative chain has an invalid timestamp of ")
+                << YellowMsg(std::to_string(b.timestamp)) << std::endl;
 
       //add_block_as_invalid(b, id);//do not add blocks to invalid storage before proof of work check was passed
       bvc.m_verification_failed = true;
@@ -1289,18 +1301,26 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
     if (!(current_diff)) { logger(ERROR, BRIGHT_RED) << "!!!!!!! DIFFICULTY OVERHEAD !!!!!!!"; return false; }
     Crypto::Hash proof_of_work = NULL_HASH;
     if (!m_currency.checkProofOfWork(m_cn_context, bei.bl, current_diff, proof_of_work)) {
-      logger(INFO, BRIGHT_RED) <<
+      logger(DEBUGGING) <<
         "Block with id: " << id
         << ENDL << " for alternative chain, have not enough proof of work: " << proof_of_work
         << ENDL << " expected difficulty: " << current_diff;
+
+      std::cout << BrightRedMsg("Block with ID: ") << id << std::endl
+                << BrightRedMsg(" for alternative chain doesn't have enough Proof of Work.") << std::endl
+                << BrightRedMsg("Given: ") << proof_of_work << std::endl
+                << BrightRedMsg("Expected: ") << GreenMsg(std::to_string(current_diff)) << std::endl;
 
       bvc.m_verification_failed = true;
       return false;
     }
 
     if (!prevalidate_miner_transaction(b, bei.height)) {
-      logger(INFO, BRIGHT_RED) <<
+      logger(DEBUGGING) <<
         "Block with id: " << Common::podToHex(id) << " (as alternative) have wrong miner transaction.";
+
+      std::cout << BrightRedMsg("Block with ID: ") << id << std::endl
+                << BrightRedMsg(" for alternative chain has the wrong transactions.") << std::endl;
 
       bvc.m_verification_failed = true;
       return false;
@@ -1383,8 +1403,10 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
   } else {
     //block orphaned
     bvc.m_marked_as_orphaned = true;
-    logger(INFO, BRIGHT_RED) <<
+    logger(DEBUGGING) <<
       "Block recognized as orphaned and rejected, id = " << id;
+
+    std::cout << BrightRedMsg("The Block was recognized as an orphan and has been rejected.\nID: ") << id << std::endl;
   }
 
   return true;
@@ -1630,11 +1652,17 @@ void Blockchain::print_blockchain_outs(const std::string& file) {
   }
 
   if (Common::saveStringToFile(file, ss.str())) {
-    logger(INFO, BRIGHT_WHITE) <<
+    logger(DEBUGGING) <<
       "Current outputs index writen to file: " << file;
+
+    std::cout << BrightGreenMsg("Current outputs index written to file: ")
+              << BrightMagentaMsg(file);
   } else {
-    logger(WARNING, BRIGHT_YELLOW) <<
+    logger(DEBUGGING) <<
       "Failed to write current outputs index to file: " << file;
+
+    std::cout << BrightRedMsg("Failed to write current outputs index written to file: ")
+              << BrightMagentaMsg(file);
   }
 }
 
@@ -1759,8 +1787,9 @@ bool Blockchain::checkTransactionInputs(const Transaction& tx, const Crypto::Has
 
       if (!isInCheckpointZone(getCurrentBlockchainHeight())) {
         if (!check_tx_input(in_to_key, tx_prefix_hash, tx.signatures[inputIndex], pmax_used_block_height)) {
-          logger(INFO, BRIGHT_WHITE) <<
-            "Failed to check input in transaction " << transactionHash;
+          logger(DEBUGGING) << "Failed to check input in transaction " << transactionHash;
+
+          std::cout << BrightRedMsg("Failed to check input in transaction ") << transactionHash << std::endl;
           return false;
         }
       }
@@ -1775,8 +1804,10 @@ bool Blockchain::checkTransactionInputs(const Transaction& tx, const Crypto::Has
 
       ++inputIndex;
     } else {
-      logger(INFO, BRIGHT_WHITE) <<
-        "Transaction << " << transactionHash << " contains input of unsupported type.";
+      logger(DEBUGGING) << "Transaction << " << transactionHash << " contains input of unsupported type.";
+
+      std::cout << BrightRedMsg("Transaction ") << transactionHash
+                << BrightRedMsg(" contains input of unsupported type.") << std::endl;
       return false;
     }
   }
@@ -1816,14 +1847,17 @@ bool Blockchain::check_tx_input(const KeyInput& txin, const Crypto::Hash& tx_pre
     bool handle_output(const Transaction& tx, const TransactionOutput& out, size_t transactionOutputIndex) {
       //check tx unlock time
       if (!m_bch.is_tx_spendtime_unlocked(tx.unlockTime)) {
-        logger(INFO, BRIGHT_WHITE) <<
-          "One of outputs for one of inputs have wrong tx.unlockTime = " << tx.unlockTime;
+        logger(DEBUGGING) << "One of outputs for one of inputs have wrong tx.unlockTime = " << tx.unlockTime;
+
+        std::cout << BrightRedMsg("One of outputs has a wrong unlock time of ")
+                  << BrightYellowMsg(std::to_string(tx.unlockTime)) << std::endl;
         return false;
       }
 
       if (out.target.type() != typeid(KeyOutput)) {
-        logger(INFO, BRIGHT_WHITE) <<
-          "Output have wrong type id, which=" << out.target.which();
+        logger(DEBUGGING) << "Output have wrong type id, which=" << out.target.which();
+
+        std::cout << BrightRedMsg("Output has wrong type ID ") << BrightYellowMsg(std::to_string(out.target.which())) << std::endl;
         return false;
       }
 
@@ -1836,15 +1870,25 @@ bool Blockchain::check_tx_input(const KeyInput& txin, const Crypto::Hash& tx_pre
   std::vector<const Crypto::PublicKey *> output_keys;
   outputs_visitor vi(output_keys, *this, logger.getLogger());
   if (!scanOutputKeysForIndexes(txin, vi, pmax_related_block_height)) {
-    logger(INFO, BRIGHT_WHITE) <<
+    logger(DEBUGGING) <<
       "Failed to get output keys for tx with amount = " << m_currency.formatAmount(txin.amount) <<
       " and count indexes " << txin.outputIndexes.size();
+
+    std::cout << BrightRedMsg("Failed to get output keys for the transaction with the amount of ")
+              << BrightYellowMsg(m_currency.formatAmount(txin.amount))
+              << BrightRedMsg(" and count indexes ") << BrightYellowMsg(std::to_string(txin.outputIndexes.size()))
+              << std::endl;
     return false;
   }
 
   if (txin.outputIndexes.size() != output_keys.size()) {
-    logger(INFO, BRIGHT_WHITE) <<
+    logger(DEBUGGING) <<
       "Output keys for tx with amount = " << txin.amount << " and count indexes " << txin.outputIndexes.size() << " returned wrong keys count " << output_keys.size();
+    
+    std::cout << BrightRedMsg("Output keys for the transaction with the amount of ")
+              << BrightYellowMsg(std::to_string(txin.amount))
+              << BrightRedMsg(" and count indexes ") << BrightYellowMsg(std::to_string(txin.outputIndexes.size()))
+              << BrightRedMsg(" returned the wrong keys count of ") << BrightYellowMsg(std::to_string(output_keys.size())) << std::endl;
     return false;
   }
   
@@ -1876,16 +1920,22 @@ bool Blockchain::check_tx_outputs(const Transaction& tx) const {
   for (TransactionOutput out : tx.outputs) {
     if (out.target.type() == typeid(MultisignatureOutput)) {
       if (tx.version < TRANSACTION_VERSION_2) {
-        logger(INFO, BRIGHT_WHITE) << getObjectHash(tx) << " contains multisignature output but have verion " << tx.version;
+        logger(DEBUGGING) << getObjectHash(tx) << " contains multisignature output but have verion " << tx.version;
+        std::cout << getObjectHash(tx) << BrightRedMsg(" contains a multisignature output but is using transaction version ")
+                  << BrightYellowMsg(std::to_string(tx.version)) << std::endl;
         return false;
       } else {
         const auto& multisignatureOutput = ::boost::get<MultisignatureOutput>(out.target);
         if (multisignatureOutput.term != 0) {
           if (multisignatureOutput.term < m_currency.depositMinTerm() || multisignatureOutput.term > m_currency.depositMaxTerm()) {
-            logger(INFO, BRIGHT_WHITE) << getObjectHash(tx) << " multisignature output has invalid term: " << multisignatureOutput.term;
+            logger(DEBUGGING) << getObjectHash(tx) << " multisignature output has invalid term: " << multisignatureOutput.term;
+        std::cout << getObjectHash(tx) << BrightRedMsg(" multisignature output has an invalid term of ")
+                  << BrightYellowMsg(std::to_string(multisignatureOutput.term)) << std::endl;
             return false;
           } else if (out.amount < m_currency.depositMinAmount()) {
-            logger(INFO, BRIGHT_WHITE) << getObjectHash(tx) << " multisignature output is a deposit output, but it has too small amount: " << out.amount;
+            logger(DEBUGGING) << getObjectHash(tx) << " multisignature output is a deposit output, but it has too small amount: " << out.amount;
+        std::cout << getObjectHash(tx) << BrightRedMsg(" multisignature output is a deposit output but is too small ")
+                  << BrightYellowMsg("(") << BrightYellowMsg(std::to_string(out.amount)) << BrightYellowMsg(")") << std::endl;
             return false;
           }
         }
@@ -1898,8 +1948,11 @@ bool Blockchain::check_tx_outputs(const Transaction& tx) const {
 
 bool Blockchain::check_block_timestamp_main(const Block& b) {
   if (b.timestamp > get_adjusted_time() + m_currency.blockFutureTimeLimit()) {
-    logger(INFO, BRIGHT_WHITE) <<
-      "Timestamp of block with id: " << get_block_hash(b) << ", " << b.timestamp << ", bigger than adjusted time + 2 hours";
+    logger(DEBUGGING) << "Timestamp of block with id: " << get_block_hash(b) << ", "
+                      << b.timestamp << ", bigger than adjusted time + 2 hours";
+    std::cout << BrightRedMsg("Timestamp of Block the with ID of ") << get_block_hash(b) << std::endl
+              << BrightRedMsg(" has a bigger timestamp than the adjusted time + 2 hours.")
+              << BrightYellowMsg("(") << BrightYellowMsg(std::to_string(b.timestamp)) << BrightYellowMsg(")") << std::endl;
     return false;
   }
 
@@ -1920,9 +1973,14 @@ bool Blockchain::check_block_timestamp(std::vector<uint64_t> timestamps, const B
   uint64_t median_ts = Common::medianValue(timestamps);
 
   if (b.timestamp < median_ts) {
-    logger(INFO, BRIGHT_WHITE) <<
-      "Timestamp of block with id: " << get_block_hash(b) << ", " << b.timestamp <<
-      ", less than median of last " << m_currency.timestampCheckWindow() << " blocks, " << median_ts;
+    logger(DEBUGGING) << "Timestamp of block with id: " << get_block_hash(b) << ", "
+                      << b.timestamp << ", less than median of last "
+                      << m_currency.timestampCheckWindow() << " blocks, " << median_ts;
+    std::cout << BrightRedMsg("Timestamp of Block the with ID of ") << get_block_hash(b) << std::endl
+              << BrightRedMsg(" is less than the median of the last ")
+              << BrightYellowMsg(std::to_string(m_currency.timestampCheckWindow()))
+              << BrightRedMsg(" amount of blocks. ") << std::endl
+              << BrightYellowMsg("(") << BrightYellowMsg(std::to_string(median_ts)) << BrightYellowMsg(")") << std::endl;
     return false;
   }
 
@@ -1933,8 +1991,12 @@ bool Blockchain::checkBlockVersion(const Block& b, const Crypto::Hash& blockHash
   uint64_t height = get_block_height(b);
   const uint8_t expectedBlockVersion = get_block_major_version_for_height(height);
   if (b.majorVersion != expectedBlockVersion) {
-    logger(INFO, BRIGHT_WHITE) << "Block " << blockHash << " has wrong major version: " << static_cast<int>(b.majorVersion) <<
+    logger(DEBUGGING) << "Block " << blockHash << " has wrong major version: " << static_cast<int>(b.majorVersion) <<
       ", at height " << height << " expected version is " << static_cast<int>(expectedBlockVersion);
+    std::cout << BrightRedMsg("Block: ") << blockHash << std::endl 
+              << BrightRedMsg(" has the wrong Major Version of ") << BrightYellowMsg(std::to_string(b.majorVersion))
+              << BrightRedMsg(" on height ") << BrightYellowMsg(std::to_string(height)) << BrightRedMsg(".") << std::endl
+              << BrightYellowMsg("Expected version is ") << GreenMsg(std::to_string(expectedBlockVersion)) << std::endl;
     return false;
   }
 
@@ -1944,9 +2006,12 @@ bool Blockchain::checkBlockVersion(const Block& b, const Crypto::Hash& blockHash
 bool Blockchain::checkCumulativeBlockSize(const Crypto::Hash& blockId, size_t cumulativeBlockSize, uint64_t height) {
   size_t maxBlockCumulativeSize = m_currency.maxBlockCumulativeSize(height);
   if (cumulativeBlockSize > maxBlockCumulativeSize) {
-    logger(INFO, BRIGHT_WHITE) <<
-      "Block " << blockId << " is too big: " << cumulativeBlockSize << " bytes, " <<
-      "exptected no more than " << maxBlockCumulativeSize << " bytes";
+    logger(DEBUGGING) << "Block " << blockId << " is too big: " << cumulativeBlockSize << " bytes, "
+                      << "exptected no more than " << maxBlockCumulativeSize << " bytes";
+
+    std::cout << BrightRedMsg("Block ") << blockId << BrightRedMsg(" is too big.") << std::endl
+              << BrightRedMsg("Given: ") << BrightYellowMsg(std::to_string(cumulativeBlockSize)) << BrightRedMsg(" bytes") << std::endl
+              << BrightRedMsg("Expected: ") << GreenMsg(std::to_string(maxBlockCumulativeSize)) << BrightRedMsg(" bytes") << std::endl;
     return false;
   }
 
@@ -2079,16 +2144,20 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
 
 
   if (blockData.previousBlockHash != getTailId()) {
-    logger(INFO, BRIGHT_WHITE) <<
-      "Block " << blockHash << " has wrong previousBlockHash: " << blockData.previousBlockHash << ", expected: " << getTailId();
+    logger(DEBUGGING) << "Block " << blockHash << " has wrong previousBlockHash: " << blockData.previousBlockHash
+                              << ", expected: " << getTailId();
+    std::cout << BrightRedMsg("Block ") << blockHash << " has the wrong previous block hash." << std::endl
+              << BrightRedMsg("Given: ") << blockData.previousBlockHash << std::endl
+              << BrightRedMsg("Expected: ") << getTailId() << std::endl;
 
     bvc.m_verification_failed = true;
     return false;
   }
 
   if (!check_block_timestamp_main(blockData)) {
-    logger(INFO, BRIGHT_WHITE) <<
-      "Block " << blockHash << " has invalid timestamp: " << blockData.timestamp;
+    logger(DEBUGGING) << "Block " << blockHash << " has invalid timestamp: " << blockData.timestamp;
+    std::cout << BrightRedMsg("Block ") << blockHash << BrightRedMsg(" has an invalid timestamp.")
+              << BrightYellowMsg("(") << BrightYellowMsg(std::to_string(blockData.timestamp)) << BrightYellowMsg(")") << std::endl;
 
     bvc.m_verification_failed = true;
     return false;
@@ -2112,8 +2181,13 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
     }
   } else {
     if (!m_currency.checkProofOfWork(m_cn_context, blockData, currentDifficulty, proof_of_work)) {
-      logger(INFO, BRIGHT_WHITE) <<
-        "Block " << blockHash << ", has too weak proof of work: " << Common::podToHex(proof_of_work) << ", expected difficulty: " << currentDifficulty << " MajorVersion: " << std::to_string(blockData.majorVersion);
+      logger(DEBUGGING) << "Block " << blockHash << ", has too weak proof of work: "
+                                 << Common::podToHex(proof_of_work) << ", expected difficulty: "
+                                 << currentDifficulty << " MajorVersion: " << std::to_string(blockData.majorVersion);
+      std::cout << BrightRedMsg("Block ") << blockHash << BrightRedMsg(" doesn't have enough Proof of Work.") << std::endl
+                << BrightRedMsg("Given: ") << Common::podToHex(proof_of_work) << std::endl
+                << BrightRedMsg("Expected: ") << currentDifficulty << std::endl
+                << BrightRedMsg("Major Version: ") << std::to_string(blockData.majorVersion) << std::endl;
       bvc.m_verification_failed = true;
       return false;
     }
@@ -2122,8 +2196,8 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
   auto longhash_calculating_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - longhashTimeStart).count();
 
   if (!prevalidate_miner_transaction(blockData, static_cast<uint32_t>(m_blocks.size()))) {
-    logger(INFO, BRIGHT_WHITE) <<
-      "Block " << blockHash << " failed to pass prevalidation";
+    logger(DEBUGGING) << "Block " << blockHash << " failed to pass prevalidation";
+    std::cout << BrightRedMsg("Block ") << blockHash << BrightRedMsg(" failed to pass the prevalidation.") << std::endl;
     bvc.m_verification_failed = true;
     return false;
   }
@@ -2156,21 +2230,29 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
     bool isTransactionValid = true;
     if (block.bl.majorVersion == BLOCK_MAJOR_VERSION_1 && transactions[i].version > TRANSACTION_VERSION_1) {
       isTransactionValid = false;
-      logger(INFO, BRIGHT_WHITE) << "Block " << blockHash << " can't contain transaction " << tx_id << " because it has invalid version " << transactions[i].version;
+      logger(DEBUGGING) << "Block " << blockHash << " can't contain transaction " << tx_id << " because it has invalid version " << transactions[i].version;
+      std::cout << BrightRedMsg("Block ") << blockHash << BrightRedMsg(" can't contain transaction ") << tx_id << std::endl
+                << BrightRedMsg(" because it has an invalid version.") << std::endl
+                << BrightYellowMsg("(") << BrightYellowMsg(std::to_string(transactions[i].version))<< BrightYellowMsg(")") << std::endl;
     }
 
     if (!checkTransactionInputs(transactions[i])) {
       isTransactionValid = false;
-      logger(INFO, BRIGHT_WHITE) << "Block " << blockHash << " has at least one transaction with wrong inputs: " << tx_id;
+      logger(DEBUGGING) << "Block " << blockHash << " has at least one transaction with wrong inputs: " << tx_id;
+      std::cout << BrightRedMsg("Block ") << blockHash << BrightRedMsg(" has at least one transaction with the wrong inputs. ") << std::endl
+                << BrightYellowMsg("(") << tx_id << BrightYellowMsg(")") << std::endl;
     }
 
     if (!check_tx_outputs(transactions[i])) {
       isTransactionValid = false;
-      logger(INFO, BRIGHT_WHITE) << "Transaction " << tx_id << " has at least one invalid output";
+      logger(DEBUGGING) << "Transaction " << tx_id << " has at least one invalid output";
+      std::cout << BrightRedMsg("Transaction ") << tx_id << BrightRedMsg(" has at least one invalid output. ") << std::endl;
     }
 
     if (!isTransactionValid) {
-      logger(INFO, BRIGHT_WHITE) << "Block " << blockHash << " has at least one invalid transaction: " << tx_id;
+      logger(DEBUGGING) << "Block " << blockHash << " has at least one invalid transaction: " << tx_id;
+      std::cout << BrightRedMsg("Block ") << blockHash << BrightRedMsg(" has at least one transaction.") << std::endl
+                << BrightYellowMsg("(") << tx_id << BrightYellowMsg(")") << std::endl;
       bvc.m_verification_failed = true;
 
       block.transactions.pop_back();
@@ -2195,7 +2277,8 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
   uint64_t reward = 0;
   uint64_t already_generated_coins = m_blocks.empty() ? 0 : m_blocks.back().already_generated_coins;
   if (!validate_miner_transaction(blockData, block.height, cumulative_block_size, already_generated_coins, fee_summary, reward, emissionChange)) {
-    logger(INFO, BRIGHT_WHITE) << "Block " << blockHash << " has invalid miner transaction";
+    logger(DEBUGGING) << "Block " << blockHash << " has invalid miner transaction";
+    std::cout << BrightRedMsg("Block ") << blockHash << BrightRedMsg(" has an invalid miner transaction.") << std::endl;
     bvc.m_verification_failed = true;
     popTransactions(block, minerTransactionHash);
     return false;
@@ -2570,11 +2653,13 @@ bool Blockchain::validateInput(const MultisignatureInput& input, const Crypto::H
 }
 
 bool Blockchain::rollbackBlockchainTo(uint32_t height) {
-  logger(INFO, YELLOW) << "Rolling back blockchain to " << height;
+  logger(DEBUGGING) << "Rolling back blockchain to " << height;
+  std::cout << BrightYellowMsg("Rolling back the Blockchain to ") << BrightMagentaMsg(std::to_string(height)) << std::endl;
   while (height + 1 < m_blocks.size()) {
     removeLastBlock();
   }
-  logger(INFO, GREEN) << "Rollback complete. Synchronization will resume.";  
+  logger(DEBUGGING) << "Rollback complete. Synchronization will resume.";
+  std::cout << BrightGreenMsg("Rollback complete. Synchronization will now resume.") << std::endl;
   return true;
 }
 
@@ -2712,7 +2797,8 @@ bool Blockchain::storeBlockchainIndices() {
 bool Blockchain::loadBlockchainIndices() {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
 
-  logger(INFO, BRIGHT_WHITE) << "Loading blockchain indices for BlockchainExplorer";
+  logger(DEBUGGING) << "Loading blockchain indices for BlockchainExplorer";
+  std::cout << GreenMsg("Loading Blockchain Indices for Blockchain Explorer.") << std::endl;
   BlockchainIndicesSerializer loader(*this, get_block_hash(m_blocks.back().bl), logger.getLogger());
 
   loadFromBinaryFile(loader, appendPath(m_config_folder, m_currency.blockchinIndicesFileName()));
@@ -2727,7 +2813,9 @@ bool Blockchain::loadBlockchainIndices() {
 
     for (uint32_t b = 0; b < m_blocks.size(); ++b) {
       if (b % 1000 == 0) {
-        logger(INFO, BRIGHT_WHITE) << "Rebuilding Indices for Height " << b << " of " << m_blocks.size();
+        logger(DEBUGGING) << "Rebuilding Indices for Height " << b << " of " << m_blocks.size();
+        std::cout << GreenMsg("Rebuilding Indices for height ") << BrightMagentaMsg(std::to_string(b))
+                  << GreenMsg(" of ") << BrightMagentaMsg(std::to_string(m_blocks.size())) << std::endl;
       }
       const BlockEntry& block = m_blocks[b];
       m_timestampIndex.add(block.bl.timestamp, get_block_hash(block.bl));
@@ -2739,7 +2827,8 @@ bool Blockchain::loadBlockchainIndices() {
     }
 
     std::chrono::duration<double> duration = std::chrono::steady_clock::now() - timePoint;
-    logger(INFO, BRIGHT_WHITE) << "Rebuilding blockchain indices took: " << duration.count();
+    logger(DEBUGGING) << "Rebuilding blockchain indices took: " << duration.count();
+    std::cout << BrightGreenMsg("Rebuilding Blockchain Indices took ") << BrightMagentaMsg(std::to_string(duration.count())) << std::endl;
   }
   return true;
 }
