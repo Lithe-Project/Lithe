@@ -20,6 +20,8 @@
 #include "CryptoNoteCore/VerificationContext.h"
 #include "P2p/LevinProtocol.h"
 
+#include "Common/ColouredMsg.h"
+
 using namespace Logging;
 using namespace Common;
 
@@ -43,16 +45,16 @@ void relay_post_notify(IP2pEndpoint &p2p, typename t_parametr::request &arg, con
 
 } // namespace
 
-CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency &currency, System::Dispatcher &dispatcher, ICore &rcore, IP2pEndpoint *p_net_layout, Logging::ILogger &log) : m_dispatcher(dispatcher),
-                                                                                                                                                                                  m_currency(currency),
-                                                                                                                                                                                  m_core(rcore),
-                                                                                                                                                                                  m_p2p(p_net_layout),
-                                                                                                                                                                                  m_synchronized(false),
-                                                                                                                                                                                  m_stop(false),
-                                                                                                                                                                                  m_observedHeight(0),
-                                                                                                                                                                                  m_peersCount(0),
-                                                                                                                                                                                  logger(log, "protocol")
-{
+CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency &currency, System::Dispatcher &dispatcher, ICore &rcore, IP2pEndpoint *p_net_layout, Logging::ILogger &log) : 
+  m_dispatcher(dispatcher),
+  m_currency(currency),
+  m_core(rcore),
+  m_p2p(p_net_layout),
+  m_synchronized(false),
+  m_stop(false),
+  m_observedHeight(0),
+  m_peersCount(0),
+  logger(log, "protocol") {
 
   if (!m_p2p)
   {
@@ -148,7 +150,10 @@ void CryptoNoteProtocolHandler::log_connections()
        << std::setw(25) << get_protocol_state_string(cntxt.m_state)
        << std::setw(20) << std::to_string(time(NULL) - cntxt.m_started) << ENDL;
   });
-  logger(INFO, GREEN) << "Connections: " << ENDL << ss.str();
+  logger(DEBUGGING) << "Connections: " << ENDL << ss.str();
+  std::string ssInfo = ss.str();
+  std::cout << BrightGreenMsg("Connections: ") << std::endl
+            << BrightMagentaMsg(ssInfo) << std::endl << std::endl;
 }
 
 /* Get a list of daemons connected to this node */
@@ -162,6 +167,12 @@ std::vector<std::string> CryptoNoteProtocolHandler::all_connections()
     connections.push_back(ipAddress);
   });
   return connections;
+}
+
+uint32_t CryptoNoteProtocolHandler::getBlockchainHeight() {
+  CORE_SYNC_DATA hshd;
+  uint32_t currentChainHeight = hshd.current_height;
+  return currentChainHeight;  
 }
 
 uint32_t CryptoNoteProtocolHandler::get_current_blockchain_height()
@@ -202,6 +213,12 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA &
                                                                                           << "Synchronization started";
 
     logger(DEBUGGING) << "Remote top block height: " << hshd.current_height << ", id: " << hshd.top_id;
+    
+    logger(diff >= 0 ? (is_inital ? Logging::INFO : Logging::DEBUGGING) : Logging::TRACE, Logging::BRIGHT_GREEN) << context <<
+      "Your Lithe node is syncing with the network. You are "
+      << std::abs(diff) << " blocks (" << std::abs(diff) / (24 * 60 * 60 / m_currency.difficultyTarget()) << " days) "
+      << (diff >= 0 ? std::string("behind") : std::string("ahead of")) << ". Slow and steady wins the race! " << std::endl;
+
     //let the socket to send response to handshake, but request callback, to let send request data after response
     logger(Logging::TRACE) << context << "requesting synchronization";
     context.m_state = CryptoNoteConnectionContext::state_sync_required;
@@ -867,6 +884,7 @@ void CryptoNoteProtocolHandler::recalculateMaxObservedHeight(const CryptoNoteCon
 
 uint32_t CryptoNoteProtocolHandler::getObservedHeight() const
 {
+  uint32_t getBlockchainHeight();
   std::lock_guard<std::mutex> lock(m_observedHeightMutex);
   return m_observedHeight;
 };

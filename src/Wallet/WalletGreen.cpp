@@ -20,6 +20,7 @@
 
 #include "ITransaction.h"
 
+#include "Common/ColouredMsg.h"
 #include "Common/ScopeExit.h"
 #include "Common/ShuffleGenerator.h"
 #include "Common/StdInputStream.h"
@@ -546,7 +547,7 @@ std::vector<std::string> WalletGreen::doCreateAddressList(const std::vector<NewA
       for (auto& addressData : addressDataList) {
         assert(addressData.creationTimestamp <= std::numeric_limits<uint64_t>::max() - m_currency.blockFutureTimeLimit());
         std::string address = addWallet(addressData.spendPublicKey, addressData.spendSecretKey, addressData.creationTimestamp);
-        //m_logger(INFO, BRIGHT_WHITE) << "New wallet added " << address << ", creation timestamp " << addressData.creationTimestamp;
+        std::cout << BrightGreenMsg("New Wallet added.\nAddress: ") << BrightMagentaMsg(address) << std::endl;
         addresses.push_back(std::move(address));
         minCreationTimestamp = std::min(minCreationTimestamp, addressData.creationTimestamp);
       }

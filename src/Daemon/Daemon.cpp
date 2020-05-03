@@ -29,12 +29,11 @@
 #include "Rpc/RpcServerConfig.h"
 #include "version.h"
 
+#include "Common/ColouredMsg.h"
 #include "Logging/ConsoleLogger.h"
 #include <Logging/LoggerManager.h>
 
-#if defined(WIN32)
-#include <crtdbg.h>
-#endif
+#include <algorithm>
 
 using Common::JsonValue;
 using namespace CryptoNote;
@@ -72,49 +71,6 @@ void print_genesis_tx_hex() {
   return;
 }
 
-// void print_genesis_tx_hex(const po::variables_map& vm) {
-  // std::vector<CryptoNote::AccountPublicAddress> targets;
- //  auto genesis_block_reward_addresses = command_line::get_arg(vm, arg_genesis_block_reward_address);
-
-//   Logging::ConsoleLogger logger;
-//   CryptoNote::CurrencyBuilder currencyBuilder(logger);
-
- //  CryptoNote::Currency currency = currencyBuilder.currency();
-
- //  for (const auto& address_string : genesis_block_reward_addresses) {
- //     CryptoNote::AccountPublicAddress address;
-   //  if (!currency.parseAccountAddressString(address_string, address)) {
-   //    std::cout << "Failed to parse address: " << address_string << std::endl;
-   //    return;
-  //   }
- //	//Print GENESIS_BLOCK_REWARD Mined Address
- //	std::cout << "Your SDN Pre-mined Address String is:  " << address_string << std::endl;
- //    targets.emplace_back(std::move(address));
-//   }
-
- //  if (targets.empty()) {
- //    if (CryptoNote::parameters::GENESIS_BLOCK_REWARD > 0) {
- //      std::cout << "Error: genesis block reward addresses are not defined" << std::endl;
- //    } else {
-
- //	  CryptoNote::Transaction tx = CryptoNote::CurrencyBuilder(logger).generateGenesisTransaction();
- //	  CryptoNote::BinaryArray txb = CryptoNote::toBinaryArray(tx);
- //	  std::string tx_hex = Common::toHex(txb);
-
-// 	  std::cout << "Insert this line into your coin configuration file as is: " << std::endl;
- //	  std::cout << "const char GENESIS_COINBASE_TX_HEX[] = \"" << tx_hex << "\";" << std::endl;
- //	}
-//   } else {
- //	CryptoNote::Transaction tx = CryptoNote::CurrencyBuilder(logger).generateGenesisTransaction(targets);
- //	CryptoNote::BinaryArray txb = CryptoNote::toBinaryArray(tx);
- //	std::string tx_hex = Common::toHex(txb);
-
- //	std::cout << "Modify this line into your lithe configuration file as is:  " << std::endl;
- //	std::cout << "const char GENESIS_COINBASE_TX_HEX[] = \"" << tx_hex << "\";" << std::endl;
-//   }
-//   return;
-// }
-
 JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
   JsonValue loggerConfiguration(JsonValue::OBJECT);
   loggerConfiguration.insert("globalLevel", static_cast<int64_t>(level));
@@ -134,39 +90,11 @@ JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
   return loggerConfiguration;
 }
 
-void renameDataDir() {
-  std::string litheDir = Tools::getDefaultDataDirectory();
-  boost::filesystem::path litheDirPath(litheDir);
-  if (boost::filesystem::exists(litheDirPath)) {
-    return;
-  }
-
-  std::string dataDirPrefix = litheDir.substr(0, litheDir.size() + 1 - sizeof(CRYPTONOTE_NAME));
-  boost::filesystem::path cediDirPath(dataDirPrefix + "BXC");
-
-  if (boost::filesystem::exists(cediDirPath)) {
-    boost::filesystem::rename(cediDirPath, litheDirPath);
-  } else {
-    boost::filesystem::path BcediDirPath(dataDirPrefix + "Bcedi");
-    if (boost::filesystem::exists(boost::filesystem::path(BcediDirPath))) {
-		boost::filesystem::rename(BcediDirPath, litheDirPath);
-    }
-  }
-}
-
-int main(int argc, char* argv[])
-{
-
-#ifdef _WIN32
-  _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
-#endif
-
+int main(int argc, char* argv[]) {
   LoggerManager logManager;
   LoggerRef logger(logManager, "daemon");
 
   try {
-    renameDataDir();
-
     po::options_description desc_cmd_only("Command line options");
     po::options_description desc_cmd_sett("Command line options and settings options");
 
@@ -184,7 +112,6 @@ int main(int argc, char* argv[])
     command_line::add_arg(desc_cmd_sett, arg_print_genesis_tx);
     command_line::add_arg(desc_cmd_sett, arg_enable_cors);
     command_line::add_arg(desc_cmd_sett, arg_blockexplorer_on);
-    //command_line::add_arg(desc_cmd_sett, arg_genesis_block_reward_address);
 
     RpcServerConfig::initOptions(desc_cmd_sett);
     CoreConfig::initOptions(desc_cmd_sett);
@@ -250,17 +177,29 @@ int main(int argc, char* argv[])
     // configure logging
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
 
-    logger(INFO, BRIGHT_MAGENTA) << "- Daemon.cpp - " << CryptoNote::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG;
+    /* write to the log what version this is */
+    logger(DEBUGGING) << "Lithe v" << PROJECT_VERSION_LONG;
+    /* now display it to the user. Displays "Lithe v0.0.2 - Pre-Alpha-Stage2" */
+    std::cout << std::endl << MagentaMsg("Lithe") << BrightMagentaMsg("v" PROJECT_VERSION " - " PROJECT_VERSION_BUILD_NO);
 
     if (command_line_preprocessor(vm, logger)) {
       return 0;
     }
 
-    logger(INFO, YELLOW) << "- Daemon.cpp - " "Module folder: " << argv[0];
+    /* show the module folder only within log file */
+    logger(DEBUGGING) << "Module folder: " << argv[0];
 
     bool testnet_mode = command_line::get_arg(vm, arg_testnet_on);
     if (testnet_mode) {
-      logger(INFO, BRIGHT_YELLOW) << "- Daemon.cpp - " "Starting in testnet mode!";
+      /* tell the log testnet is active */
+      logger(DEBUGGING) << "Started the Daemon in testnet mode.";
+      
+      /* now tell the user */
+      std::cout << std::endl << BrightYellowMsg("Activating Testnet") << std::endl
+              << YellowMsg("You have started your daemon in Testnet mode")
+              << std::endl 
+              << std::endl << YellowMsg("Remember, coins generated in testnet are not real!")
+              << std::endl << std::endl;
     }
 
     //create objects and link them
@@ -272,7 +211,7 @@ int main(int argc, char* argv[])
     try {
       currencyBuilder.currency();
     } catch (std::exception&) {
-      std::cout << "GENESIS_COINBASE_TX_HEX constant has an incorrect value. Please launch: " << CryptoNote::CRYPTONOTE_NAME << "d --" << arg_print_genesis_tx.name;
+      std::cout << "WHOOPS! It looks like the genesis transaction hex has been changed.";
       return 1;
     }
 
@@ -307,45 +246,60 @@ int main(int argc, char* argv[])
 
     cprotocol.set_p2p_endpoint(&p2psrv);
     ccore.set_cryptonote_protocol(&cprotocol);
-    DaemonCommandsHandler dch(ccore, p2psrv, logManager);
 
     // initialize objects
-    logger(INFO, YELLOW) << "- Daemon.cpp - " "Initializing p2p server...";
+    /* tell the log */
+    logger(DEBUGGING) << "Initializing p2p server...";
+    /* now the user */
+    std::cout << GreenMsg("Starting P2P Server...") << std::endl;
+
     if (!p2psrv.init(netNodeConfig)) {
-      logger(ERROR, BRIGHT_RED) << "- Daemon.cpp - Failed to initialize p2p server.";
+      logger(ERROR, BRIGHT_RED) << "Failed to initialize p2p server.";
       return 1;
     }
-
-    logger(INFO, GREEN) << "- Daemon.cpp - " "P2p server initialized OK";
+    
+    /* tell the log */
+    logger(DEBUGGING) << "P2p server initialized OK";
+    /* now the user */
+    std::cout << BrightGreenMsg("P2P Server is active.") << std::endl;
 
     // initialize core here
-    logger(INFO, YELLOW) << "- Daemon.cpp - " "Initializing core...";
+    /* tell the log */
+    logger(DEBUGGING) << "Initializing core...";
+    /* now the user */
+    std::cout << GreenMsg("Starting Core...") << std::endl;
+
     if (!ccore.init(coreConfig, minerConfig, true)) {
+      /* tell the user and the log */
       logger(ERROR, BRIGHT_RED) << "- Daemon.cpp - Failed to initialize core";
       return 1;
     }
 
-    logger(INFO, GREEN) << "- Daemon.cpp - " "Core initialized OK";
+    /* tell the log */
+    logger(DEBUGGING) << "Core initialized OK";
+    /* now the user */
+    std::cout << BrightGreenMsg("Core is active.") << std::endl;
 
-    // start components
-    if (!command_line::has_arg(vm, arg_console)) {
-      dch.start_handling();
-    }
+    /* tell the log */
+    logger(DEBUGGING) << "Starting core rpc server on address " << rpcConfig.getBindAddress();
+    /* now the user */
+    std::cout << YellowMsg("Starting Core RPC Server...") << std::endl;
 
-    logger(INFO, YELLOW) << "- Daemon.cpp - " << "Starting core rpc server on address " << rpcConfig.getBindAddress();
-  
     /* Set address for remote node fee */
   	if (command_line::has_arg(vm, arg_set_fee_address)) {
 	  std::string addr_str = command_line::get_arg(vm, arg_set_fee_address);
 	  if (!addr_str.empty()) {
         AccountPublicAddress acc = boost::value_initialized<AccountPublicAddress>();
         if (!currency.parseAccountAddressString(addr_str, acc)) {
+          /* tell the user and log file */
           logger(ERROR, BRIGHT_RED) << "Bad fee address: " << addr_str;
           return 1;
         }
         rpcServer.setFeeAddress(addr_str, acc);
-        logger(INFO, BRIGHT_YELLOW) << "- Daemon.cpp - " << "Remote node fee address set: " << addr_str;
-
+        /* tell the log */
+        logger(DEBUGGING) << "Remote node fee address set: " << addr_str;
+        /* now the user */
+        std::cout << BrightGreenMsg("Remote node address set to: ") << BrightMagentaMsg(addr_str) << std::endl;
       }
 	  }
   
@@ -355,44 +309,77 @@ int main(int argc, char* argv[])
       std::string vk_str = command_line::get_arg(vm, arg_set_view_key);
 	    if (!vk_str.empty()) {
         rpcServer.setViewKey(vk_str);
-        logger(INFO, BRIGHT_YELLOW) << "- Daemon.cpp - " << "Secret view key set: " << vk_str;
+        /* tell the log */
+        logger(DEBUGGING) << "Secret view key set: " << vk_str;
+        /* now the user */
+        std::cout << BrightGreenMsg("Secret View Key set: ") << BrightMagentaMsg(vk_str) << std::endl;
       }
     }
  
     rpcServer.start(rpcConfig.bindIp, rpcConfig.bindPort);
 	  rpcServer.enableCors(command_line::get_arg(vm, arg_enable_cors));
-    logger(INFO, GREEN) << "- Daemon.cpp - " "Core rpc server started ok";
+    /* tell the log */
+    logger(DEBUGGING) << "Core rpc server started ok";
+    /* now the user */
+    std::cout << BrightGreenMsg("Core RPC Server started on: ") << BrightMagentaMsg(rpcConfig.getBindAddress()) << std::endl;
+
+    DaemonCommandsHandler dch(ccore, p2psrv, logManager, &rpcServer);
+
+    // start components
+    if (!command_line::has_arg(vm, arg_console)) {
+      dch.start_handling();
+    }
 
     Tools::SignalHandler::install([&dch, &p2psrv] {
       dch.stop_handling();
       p2psrv.sendStopSignal();
     });
 
-    logger(INFO, YELLOW) << "- Daemon.cpp - " "Starting p2p net loop...";
+    /* tell the log */
+    logger(DEBUGGING) << "Starting p2p net loop...";
+    /* now the user */
+    std::cout << BrightGreenMsg("Starting P2P Net Loop.") << std::endl;
     p2psrv.run();
-    logger(INFO, YELLOW) << "- Daemon.cpp - " "p2p net loop stopped";
+    /* tell the log */
+    logger(DEBUGGING) << "p2p net loop stopped";
+    /* now the user */
+    std::cout << GreenMsg("P2P Net Loop is now stopping.") << std::endl;
 
     dch.stop_handling();
 
     //stop components
-    logger(INFO, YELLOW) << "- Daemon.cpp - " "Stopping core rpc server...";
+    /* tell the log */
+    logger(DEBUGGING) << "Stopping core rpc server...";
+    /* now the user */
+    std::cout << GreenMsg("Core RPC Server has now stopped.") << std::endl;
     rpcServer.stop();
 
     //deinitialize components
-    logger(INFO, YELLOW) << "- Daemon.cpp - " "Deinitializing core...";
+    /* tell the log */
+    logger(DEBUGGING) << "Deinitializing core...";
+    /* now the user */
+    std::cout << GreenMsg("Core has now stopped.") << std::endl;
     ccore.deinit();
-    logger(INFO, YELLOW) << "- Daemon.cpp - " "Deinitializing p2p...";
+    /* tell the log */
+    logger(DEBUGGING) << "Deinitializing p2p...";
+    /* now the user */
+    std::cout << GreenMsg("P2P Net Loop has now stopped.") << std::endl;
     p2psrv.deinit();
 
     ccore.set_cryptonote_protocol(NULL);
     cprotocol.set_p2p_endpoint(NULL);
 
   } catch (const std::exception& e) {
+    /* tell the user and log file */
     logger(ERROR, BRIGHT_RED) << "Exception: " << e.what();
     return 1;
   }
 
-  logger(INFO, YELLOW) << "- Daemon.cpp - " "Node stopped.";
+  /* tell the log */
+  logger(DEBUGGING) << "Node stopped.";
+  /* now the user */
+  std::cout << GreenMsg("The Daemon has now stopped.") << std::endl;
+
   return 0;
 }
 

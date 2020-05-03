@@ -2,12 +2,19 @@
 
 ## Changelog
 
+#### v0.0.3
+-
+
 #### v0.0.2 - Pre-Alpha Stage 2
 > Stage 2 of Pre-Alpha is the stage of letting more people know about Lithe. No main chain is still yet to be
   active. Everything is currently running using `--testnet` within `lithe-daemon` and `lithe-wallet`.
 
 - Removed logging from the event of a new wallet being created because it leaked private information into the log files.
 - Add carifying colours to `lithe-wallet` and tidied up some areas.
+- CMake fixes.
+- Ported a basic implementation of @TurtleCoin's status command which includes mining speed and sync percentage while also tracking uptime.
+- Daemon CLI UI revamp.
+- Now there are 2 new functions (for clarifacation) to call the chains height. one is for the daemon height and the other is for the actual blockchain height.
 
 #### v0.0.1 - Pre-Alpha
 - Forked Conceal at [this commit](https://github.com/ConcealNetwork/conceal-core/commit/6c07dbd781deed8d6e49fe98abac5e8175650321).

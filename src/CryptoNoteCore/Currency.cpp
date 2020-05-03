@@ -2,7 +2,7 @@
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2019-2020 The Lithe Project Development Team
-//
+
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,7 @@
 #include "../Common/Base58.h"
 #include "../Common/int-util.h"
 #include "../Common/StringTools.h"
+#include "../Common/ColouredMsg.h"
 
 #include "CryptoNoteConfig.h"
 #include "Account.h"
@@ -330,7 +331,8 @@ bool Currency::getTransactionFee(const Transaction& tx, uint64_t& fee, uint32_t 
     // interest shows up in the output of the W/D transactions and W/Ds always have min fee
     if (tx.inputs.size() > 0 && tx.outputs.size() > 0 && amount_out > amount_in + parameters::MINIMUM_FEE) {
       fee = parameters::MINIMUM_FEE;
-      logger(INFO, YELLOW) << "TRIGGERED: Currency.cpp getTransactionFee";
+      logger(DEBUGGING) << "TRIGGERED: Currency.cpp getTransactionFee";
+      std::cout << GreenMsg("Getting Transaction Fee.") << std::endl;
     } else {
       return false;
     }
@@ -386,7 +388,8 @@ bool Currency::constructMinerTx(uint32_t height, size_t medianSize, uint64_t alr
   uint64_t blockReward;
   int64_t emissionChange;
   if (!getBlockReward(medianSize, currentBlockSize, alreadyGeneratedCoins, fee, height, blockReward, emissionChange)) {
-    logger(INFO, RED) << "Block is too big";
+    logger(DEBUGGING) << "Block is too big";
+    std::cout << BrightRedMsg("Block is too big.") << std::endl;
     return false;
   }
 

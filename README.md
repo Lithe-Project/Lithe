@@ -1,4 +1,4 @@
-###### The Lithe Project&trade; Development Team
+﻿###### The Lithe Project&trade; Development Team
 
 ## Lithe - $LXTH
 
@@ -21,10 +21,11 @@ and assisting new means of use for digital economics in real-world situations, t
 
 If you're intrested in taking part with **Lithe** before mainnet, then it is suggested that you read, and look for updates, here.
 
-| Version | Net State | Description |
-|---------|-----------|-------------|
-| 0.0.1 | Pre Alpha | General development |
-| 0.0.2 | Pre Alpha Stage 2 | Allow public use |
+| Version | Description |
+|---------|-------------|
+| 0.0.1 | General development |
+| 0.0.2 | Allow public use |
+| 0.0.3 | Major CLI UI & Logging updates  |
 
 #### Documents
 

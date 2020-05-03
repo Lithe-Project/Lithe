@@ -2,7 +2,7 @@
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Copyright (c) 2019-2020 The Lithe Project Development Team
-//
+
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,6 +26,8 @@
 #include "Miner.h"
 #include "TransactionExtra.h"
 #include "IBlock.h"
+
+#include "Common/ColouredMsg.h"
 
 #undef ERROR
 
@@ -113,7 +115,6 @@ bool core::get_blocks(uint32_t start_offset, uint32_t count, std::list<Block>& b
   return m_blockchain.getBlocks(start_offset, count, blocks, txs);
 }
 
-
 bool core::get_blocks(uint32_t start_offset, uint32_t count, std::list<Block>& blocks) {
   return m_blockchain.getBlocks(start_offset, count, blocks);
 }
@@ -132,6 +133,8 @@ size_t core::get_alternative_blocks_count() {
 bool core::init(const CoreConfig& config, const MinerConfig& minerConfig, bool load_existing) {
   m_config_folder = config.configFolder;
   bool r = m_mempool.init(m_config_folder);
+
+  start_time = std::time(nullptr);
 
   if (!(r)) {
     logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "Failed to initialize memory pool";
@@ -214,7 +217,9 @@ bool core::handle_incoming_tx(const BinaryArray& tx_blob, tx_verification_contex
   //want to process all transactions sequentially
 
   if (tx_blob.size() > m_currency.maxTxSize()) {
-    logger(INFO, RED) << "- Core.cpp - " << "WRONG TRANSACTION BLOB, too big size " << tx_blob.size() << "<< Core.cpp << " << ", rejected";
+    logger(DEBUGGING) << "- Core.cpp - " << "WRONG TRANSACTION BLOB, too big size " << tx_blob.size() << "<< Core.cpp << " << ", rejected";
+    std::cout << BrightRedMsg("Wrong Transaction Blob. The size is too big so it was rejected.")
+              << BrightYellowMsg("(") << BrightYellowMsg(std::to_string(tx_blob.size())) << BrightYellowMsg(")") << std::endl;
     tvc.m_verification_failed = true;
     return false;
   }
@@ -224,7 +229,8 @@ bool core::handle_incoming_tx(const BinaryArray& tx_blob, tx_verification_contex
   Transaction tx;
 
   if (!parse_tx_from_blob(tx, tx_hash, tx_prefixt_hash, tx_blob)) {
-    logger(INFO, RED) << "- Core.cpp - " << "WRONG TRANSACTION BLOB, Failed to parse, rejected";
+    logger(DEBUGGING) << "WRONG TRANSACTION BLOB, Failed to parse, rejected";
+    std::cout << BrightRedMsg("Wrong Transaction Blob. Failed to parse so it was rejected.") << std::endl;
     tvc.m_verification_failed = true;
     return false;
   }
@@ -536,14 +542,17 @@ void core::getPoolChanges(const std::vector<Crypto::Hash>& knownTxsIds, std::vec
 
 bool core::handle_incoming_block_blob(const BinaryArray& block_blob, block_verification_context& bvc, bool control_miner, bool relay_block) {
   if (block_blob.size() > m_currency.maxBlockBlobSize()) {
-    logger(INFO, RED) << "- Core.cpp - " << "WRONG BLOCK BLOB, too big size " << block_blob.size() << "<< Core.cpp << " << ", rejected";
+    logger(DEBUGGING) << "WRONG BLOCK BLOB, too big size " << block_blob.size() << ", rejected";
+    std::cout << BrightRedMsg("Wrong Block Blob. The size is too big so it was rejected.")
+              << BrightYellowMsg("(") << BrightYellowMsg(std::to_string(block_blob.size())) << BrightYellowMsg(")") << std::endl;
     bvc.m_verification_failed = true;
     return false;
   }
 
   Block b;
   if (!fromBinaryArray(b, block_blob)) {
-    logger(INFO, RED) << "- Core.cpp - " << "Failed to parse and validate new block";
+    logger(DEBUGGING) << "- Core.cpp - " << "Failed to parse and validate new block";
+    std::cout << BrightRedMsg("Failed to parse and validate the new block.") << std::endl;
     bvc.m_verification_failed = true;
     return false;
   }
@@ -567,11 +576,14 @@ bool core::handle_incoming_block(const Block& b, block_verification_context& bvc
     std::list<Transaction> txs;
     m_blockchain.getTransactions(b.transactionHashes, txs, missed_txs);
     if (!missed_txs.empty() && getBlockIdByHeight(get_block_height(b)) != get_block_hash(b)) {
-      logger(INFO, RED) << "- Core.cpp - " << "Block added, but it seems that reorganize just happened after that, do not relay this block";
+      logger(DEBUGGING) << "Block added, but it seems that reorganize just happened after that, do not relay this block";
+      std::cout << BrightRedMsg("Block added but it seems that a reorganize has just happened") << std::endl
+                << BrightRedMsg(" after that. Please do not relay this block.") << std::endl;
     } else {
       if (!(txs.size() == b.transactionHashes.size() && missed_txs.empty())) {
-        logger(ERROR, BRIGHT_RED) << "- Core.cpp - " << "can't find some transactions in found block:" <<
-          get_block_hash(b) << "- Core.cpp - " << " txs.size()=" << txs.size() << "- Core.cpp - " << ", b.transactionHashes.size()=" << b.transactionHashes.size() << "- Core.cpp - " << ", missed_txs.size()" << missed_txs.size(); return false;
+        logger(ERROR, BRIGHT_RED) << "can't find some transactions in found block:" << get_block_hash(b)
+                                  << " txs.size()=" << txs.size() << ", b.transactionHashes.size()=" << b.transactionHashes.size() << ", missed_txs.size()" << missed_txs.size(); return false;
+      
       }
 
       NOTIFY_NEW_BLOCK::request arg;
@@ -679,13 +691,20 @@ bool core::update_miner_block_template() {
 
 bool core::on_idle() {
   if (!m_starter_message_showed) {
-    logger(INFO, MAGENTA) << "**********************************************************************" << ENDL;
-    logger(INFO, BRIGHT_YELLOW) << "The daemon will continue synchronizing with the network." << ENDL;
-    logger(INFO, BRIGHT_YELLOW) << "If this is a new installation it may take up to several hours." << ENDL;
-    logger(INFO, BRIGHT_YELLOW) << "You can set the level of process detailization through \"set_log <level>\" command*, where <level> is between 0 (no details) and 4 (very verbose)." << ENDL;
-    logger(INFO, BRIGHT_YELLOW) << "Use \"help\" command to see the list of available commands." << ENDL;
-    logger(INFO, RED) << "Note: in case you need to interrupt the process, use \"exit\" command. Otherwise, the current progress won't be saved." << ENDL;
-    logger(INFO, MAGENTA) << "**********************************************************************";
+    /* no need to log starter message */
+    std::cout << std::endl
+              << BrightGreenMsg("Your Daemon is setup and ready to go!") << std::endl
+              << std::endl
+              << BrightMagentaMsg("Your Daemon will now continue synchronizing\n with the network.") << std::endl
+              << std::endl
+              << BrightYellowMsg("You should always use \"exit\" command when closing\n lithe-wallet to save your current session's state.") << std::endl
+              << std::endl
+              << BrightYellowMsg("Otherwise, you will possibly need to re-synchronize\n your chain.") << std::endl
+              << std::endl
+              << GreenMsg("Type \"help\" to see the list of available commands.") << std::endl
+              << std::endl
+              << BrightMagentaMsg("Good luck!") << std::endl;
+    
     m_starter_message_showed = true;
   }
 
@@ -712,6 +731,14 @@ void core::txDeletedFromPool() {
 
 void core::poolUpdated() {
   m_observerManager.notify(&ICoreObserver::poolUpdated);
+}
+
+uint32_t core::getDaemonHeight() {
+  /* the daemon gets its height from its own known blocks */
+  LockedBlockchainStorage lbs(m_blockchain);
+  uint32_t currentHeight = lbs->getCurrentBlockchainHeight();
+
+  return currentHeight;
 }
 
 bool core::queryBlocks(const std::vector<Crypto::Hash>& knownBlockIds, uint64_t timestamp,
@@ -1016,13 +1043,15 @@ uint64_t core::depositInterestAtHeight(size_t height) const {
 
 bool core::handleIncomingTransaction(const Transaction& tx, const Crypto::Hash& txHash, size_t blobSize, tx_verification_context& tvc, bool keptByBlock, uint32_t height) {
   if (!check_tx_syntax(tx)) {
-    logger(INFO, RED) << "- Core.cpp - " << "WRONG TRANSACTION BLOB, Failed to check tx " << txHash << " syntax, rejected";
+    logger(DEBUGGING) << "WRONG TRANSACTION BLOB, Failed to check tx " << txHash << " syntax, rejected";
+    std::cout << BrightRedMsg("Wrong Transaction Blob.\nFailed to check the transaction syntax of ") << txHash << BrightRedMsg(" so it was rejected.") << std::endl;
     tvc.m_verification_failed = true;
     return false;
   }
 
   if (!check_tx_semantic(tx, keptByBlock, height)) {
-    logger(INFO, RED) << "- Core.cpp - " << "WRONG TRANSACTION BLOB, Failed to check tx " << txHash << " semantic, rejected";
+    logger(DEBUGGING) << "WRONG TRANSACTION BLOB, Failed to check tx " << txHash << " semantic, rejected";
+    std::cout << BrightRedMsg("Wrong Transaction Blob.\nFailed to check the transaction semantic of ") << txHash << BrightRedMsg(" so it was rejected.") << std::endl;
     tvc.m_verification_failed = true;
     return false;
   }
@@ -1030,9 +1059,10 @@ bool core::handleIncomingTransaction(const Transaction& tx, const Crypto::Hash& 
   bool r = add_new_tx(tx, txHash, blobSize, tvc, keptByBlock, height);
   if (tvc.m_verification_failed) {
     if (!tvc.m_tx_fee_too_small) {
-      logger(ERROR) << "- Core.cpp - " << "Transaction verification failed: " << txHash;
+      logger(ERROR) << "Transaction verification failed: " << txHash;
     } else {
-      logger(INFO, RED) << "- Core.cpp - " << "Transaction verification failed: " << txHash;
+      logger(DEBUGGING) << "Transaction verification failed: " << txHash;
+      std::cout << BrightRedMsg("Transaction verification failed for ") << txHash << std::endl;
     }
   } else if (tvc.m_verification_impossible) {
     logger(ERROR) << "- Core.cpp - " << "Transaction verification impossible: " << txHash;
@@ -1079,6 +1109,10 @@ bool core::addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
 
 bool core::removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
   return m_blockchain.removeMessageQueue(messageQueue);
+}
+
+std::time_t core::getStartTime() const {
+  return start_time;
 }
 
 }

@@ -13,6 +13,10 @@
 #include <Logging/LoggerRef.h>
 #include <Logging/LoggerManager.h>
 
+#include "Rpc/RpcServer.h"
+#include "Rpc/CoreRpcServerCommandsDefinitions.h"
+#include "Rpc/JsonRpc.h"
+
 namespace CryptoNote {
 class core;
 class Currency;
@@ -22,7 +26,7 @@ class NodeServer;
 class DaemonCommandsHandler
 {
 public:
-  DaemonCommandsHandler(CryptoNote::core& core, CryptoNote::NodeServer& srv, Logging::LoggerManager& log);
+  DaemonCommandsHandler(CryptoNote::core& core, CryptoNote::NodeServer& srv, Logging::LoggerManager& log, CryptoNote::RpcServer* prpc_server);
 
   bool start_handling() {
     m_consoleHandler.start();
@@ -40,6 +44,7 @@ private:
   CryptoNote::NodeServer& m_srv;
   Logging::LoggerRef logger;
   Logging::LoggerManager& m_logManager;
+  CryptoNote::RpcServer* m_prpc_server;
 
   std::string get_commands_str();
   bool print_block_by_height(uint32_t height);
@@ -66,5 +71,8 @@ private:
 
   bool start_mining(const std::vector<std::string>& args);
   bool stop_mining(const std::vector<std::string>& args);
+
   bool status(const std::vector<std::string>& args);
+  std::string get_mining_speed(uint32_t hr);
+  std::string get_sync_percentage(uint64_t height, uint64_t target_height);
 };

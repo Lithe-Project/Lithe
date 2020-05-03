@@ -12,6 +12,8 @@
 #include <memory.h>
 #include <stdio.h>
 
+#include "Common/ColouredMsg.h"
+
 #if defined(_WIN32)
 #include <io.h>
 #include <windows.h>
@@ -84,16 +86,16 @@ namespace Tools
     bool r;
     if (is_cin_tty()) {
       if (verify) {
-        std::cout << "Give your new wallet a password: ";
+        std::cout << BrightYellowMsg("Give your new wallet a password: ");
       } else {
-        std::cout << "Enter password: ";
+        std::cout << BrightYellowMsg("Enter password: ");
       }
       if (verify) {
         std::string password1;
         std::string password2;
         r = read_from_tty(password1);
         if (r) {
-          std::cout << "Confirm your new password: ";
+          std::cout << BrightYellowMsg("Confirm your new password: ");
           r = read_from_tty(password2);
           if (r) {
             if (password1 == password2) {
@@ -101,7 +103,7 @@ namespace Tools
               m_empty = false;
 	            return true;
             } else {
-              std::cout << "Passwords do not match, try again." << std::endl;
+              std::cout << BrightRedMsg("Passwords do not match, try again.") << std::endl;
               clear();
 	            return read_password(true);
             }

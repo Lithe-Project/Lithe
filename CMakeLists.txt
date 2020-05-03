@@ -1,19 +1,17 @@
 cmake_minimum_required(VERSION 2.8.6)
 
-set(VERSION "0.0.1")
-# Packaged from main commits
-set(COMMIT 72946d9)
+set(VERSION "0.0.3")
+# BUILD_ID = the next commit number to master branch
+set(BUILD_ID 29)
 set(REFS " (HEAD -> master)")
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set(CMAKE_CONFIGURATION_TYPES Debug RelWithDebInfo Release CACHE TYPE INTERNAL)
-set(CMAKE_SKIP_INSTALL_RULES ON)
+set(CMAKE_SKIP_INSTALL_RULES OFF)
 set(CMAKE_SKIP_PACKAGE_ALL_DEPENDENCY ON)
 set(CMAKE_SUPPRESS_REGENERATION ON)
-enable_testing()
 
 if(DO_TESTS)
   message(STATUS "BUILD TESTS: enabled")
@@ -21,9 +19,6 @@ if(DO_TESTS)
 else()
   message(STATUS "BUILD TESTS: disabled")
 endif()
-
-# copy CTestCustom.cmake to build dir to disable long running tests in 'make test'
-configure_file(${CMAKE_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR})
 
 project(lithe)
 
@@ -122,10 +117,10 @@ if (NOT COMMIT_ID_IN_VERSION)
   set(VERSION "${VERSION}-unknown")
   configure_file("src/version.h.in" "version/version.h")
   add_custom_target(version ALL)
-elseif(DEFINED COMMIT)
+elseif(DEFINED BUILD_ID)
   string(REPLACE "." "\\." VERSION_RE "${VERSION}")
   if(NOT REFS MATCHES "(\\(|, )tag: v${VERSION_RE}(\\)|, )")
-    set(VERSION "${VERSION}-g${COMMIT}")
+    set(VERSION "${VERSION}-g${BUILD_ID}")
   endif()
   configure_file("src/version.h.in" "version/version.h")
   add_custom_target(version ALL)
