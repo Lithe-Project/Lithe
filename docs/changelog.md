@@ -3,7 +3,8 @@
 ## Changelog
 
 #### v0.0.3
--
+- SimpleWallet UI improvements.
+- Logging fixes.
 
 #### v0.0.2 - Pre-Alpha Stage 2
 > Stage 2 of Pre-Alpha is the stage of letting more people know about Lithe. No main chain is still yet to be

@@ -54,16 +54,6 @@ namespace CryptoNote
 
   private:
 
-    Logging::LoggerMessage success_msg_writer(bool color = false) {
-      return logger(Logging::INFO, color ? Logging::GREEN : Logging::DEFAULT);
-    }
-
-    Logging::LoggerMessage fail_msg_writer() const {
-      auto msg = logger(Logging::ERROR, Logging::BRIGHT_RED);
-      msg << "Error: ";
-      return msg;
-    }
-
     void handle_command_line(const boost::program_options::variables_map& vm);
     void log_incorrect_words(std::vector<std::string>);
     void printConnectionError() const;
