@@ -21,6 +21,7 @@
 #include <boost/utility/value_init.hpp>
 
 #include "crypto/crypto.h"
+#include "Common/Base64.h"
 #include "Common/CommandLine.h"
 #include "Common/StringTools.h"
 #include "Serialization/SerializationTools.h"
@@ -158,7 +159,7 @@ namespace CryptoNote
         boost::algorithm::trim(extra_vec[i]);
         if(!extra_vec[i].size())
           continue;
-        BinaryArray ba = Common::asBinaryArray(Common::base64Decode(extra_vec[i]));
+        BinaryArray ba = Common::asBinaryArray(Tools::Base64::decode(extra_vec[i]));
         if(buff != "0")
           m_extra_messages[i] = ba;
       }
