@@ -119,6 +119,7 @@ public:
   virtual void initWithKeys(const AccountKeys& accountKeys, const std::string& password) = 0;
   virtual void shutdown() = 0;
   virtual void reset() = 0;
+  virtual void reset(uint64_t height) = 0;
   virtual bool checkWalletPassword(std::istream& source, const std::string& password) = 0;
 
   virtual void save(std::ostream& destination, bool saveDetailed = true, bool saveCache = true) = 0;
@@ -144,6 +145,8 @@ public:
 
   virtual TransactionId findTransactionByTransferId(TransferId transferId) = 0;
   virtual void getAccountKeys(AccountKeys& keys) = 0;
+  virtual void syncAll(bool syncWalletFromZero = 0, uint64_t height = 0) = 0;
+  
   virtual bool getTransaction(TransactionId transactionId, WalletLegacyTransaction& transaction) = 0;
   virtual bool getTransfer(TransferId transferId, WalletLegacyTransfer& transfer) = 0;
   virtual bool getDeposit(DepositId depositId, Deposit& deposit) = 0;
@@ -155,6 +158,7 @@ public:
   virtual size_t estimateFusion(const uint64_t& threshold) = 0;
   virtual std::list<TransactionOutputInformation> selectFusionTransfersToSend(uint64_t threshold, size_t minInputCount, size_t maxInputCount) = 0;
   virtual TransactionId sendFusionTransaction(const std::list<TransactionOutputInformation>& fusionInputs, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) = 0;
+  
   virtual TransactionId deposit(uint32_t term, uint64_t amount, uint64_t fee, uint64_t mixIn = 0) = 0;
   virtual TransactionId withdrawDeposits(const std::vector<DepositId>& depositIds, uint64_t fee) = 0;
   virtual std::error_code cancelTransaction(size_t transferId) = 0;

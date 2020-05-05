@@ -126,7 +126,8 @@ void wallet_rpc_server::processRequest(const CryptoNote::HttpRequest& request, C
       { "optimize", makeMemberMethod(&wallet_rpc_server::on_optimize) },
       { "estimate_fusion"  , makeMemberMethod(&wallet_rpc_server::on_estimate_fusion) },
       { "send_fusion"      , makeMemberMethod(&wallet_rpc_server::on_send_fusion) },
-      { "reset", makeMemberMethod(&wallet_rpc_server::on_reset) }
+      { "reset", makeMemberMethod(&wallet_rpc_server::on_reset) },
+      { "reset_from", makeMemberMethod(&wallet_rpc_server::on_reset_from) }
     };
 
     auto it = s_methods.find(jsonRequest.getMethod());
@@ -490,6 +491,11 @@ bool wallet_rpc_server::on_get_outputs(const wallet_rpc::COMMAND_RPC_GET_OUTPUTS
 }
 
 bool wallet_rpc_server::on_reset(const wallet_rpc::COMMAND_RPC_RESET::request& req, wallet_rpc::COMMAND_RPC_RESET::response& res) {
+  m_wallet.reset();
+  return true;
+}
+
+bool wallet_rpc_server::on_reset_from(const wallet_rpc::COMMAND_RPC_RESET_FROM::request& req, wallet_rpc::COMMAND_RPC_RESET_FROM::response& res) {
   m_wallet.reset();
   return true;
 }
