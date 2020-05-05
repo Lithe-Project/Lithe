@@ -71,8 +71,9 @@ const command_line::arg_descriptor<std::string> arg_password = { "password", "Wa
 const command_line::arg_descriptor<uint16_t>    arg_daemon_port = { "daemon-port", "Use daemon instance at port <arg> instead of default", 0 };
 const command_line::arg_descriptor<uint32_t>    arg_log_level = { "set_log", "", INFO, true };
 const command_line::arg_descriptor<bool>        arg_testnet = { "testnet", "Used to deploy test nets. The daemon must be launched with --testnet flag", false };
+const command_line::arg_descriptor<bool>        arg_sync_from_zero = {"sync_from_zero", "Sync from block 0. Use for premine wallet", false};
+const command_line::arg_descriptor<bool>        arg_exit_after_generate = {"exit-after-generate", "Exit immediately after generating a wallet (doesn't try to sync with the daemon)", false};
 const command_line::arg_descriptor<std::vector<std::string>> arg_command = { "command", "" };
-const command_line::arg_descriptor<bool>        arg_sync_from_zero  = {"sync_from_zero", "Sync from block 0. Use for premine wallet", false};
 
 bool parseUrlAddress(const std::string& url, std::string& address, uint16_t& port) {
   auto pos = url.find("://");
@@ -712,8 +713,10 @@ if (key_import) {
       logger(WARNING, BRIGHT_RED) << "Couldn't write wallet address file: " + walletAddressFile;
     }
   } else {
-    m_wallet.reset(new WalletLegacy(m_currency, *m_node, logManager));
-    m_wallet->syncAll(sync_from_zero, 0);
+    if(!exit_after_generate) {
+      m_wallet.reset(new WalletLegacy(m_currency, *m_node, logManager));
+      m_wallet->syncAll(sync_from_zero, 0);
+    }
 
     try {
       m_wallet_file = tryToOpenWalletOrLoadKeysOrThrow(logger, m_wallet, m_wallet_file_arg, m_pwd_container.password());
@@ -728,6 +731,11 @@ if (key_import) {
 
     std::cout << BrightGreenMsg("Opened Wallet: ") << BrightMagentaMsg(m_wallet->getAddress()) << std::endl << std::endl;
     std::cout << YellowMsg("Use \"help\" command to see the list of available commands.\n") << std::endl;
+    
+    if(exit_after_generate) {
+      m_consoleHandler.requestStop();
+      std::exit(0);
+    }
   }
 
   return true;
@@ -807,6 +815,7 @@ void simple_wallet::handle_command_line(const boost::program_options::variables_
   m_daemon_address = command_line::get_arg(vm, arg_daemon_address);
   m_daemon_host = command_line::get_arg(vm, arg_daemon_host);
   m_daemon_port = command_line::get_arg(vm, arg_daemon_port);
+  exit_after_generate = command_line::get_arg(vm, arg_exit_after_generate);
 }
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string& password) {
@@ -881,6 +890,11 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
             << std::endl
             << YellowMsg("If you forget to use exit, your wallet is not at risk in anyway.") << std::endl;
 
+  if(exit_after_generate) {
+    m_consoleHandler.requestStop();
+    std::exit(0);
+  }
+
   return true;
 }
 //----------------------------------------------------------------------------------------------------
@@ -934,6 +948,12 @@ bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey 
             << BrightYellowMsg("Always use \"exit\" command when closing simplewallet to save") << std::endl
             << BrightYellowMsg("current session's state. Otherwise, you will possibly need to synchronize") << std::endl
             << BrightYellowMsg("your wallet again. Your wallet key is NOT under risk anyway.") << std::endl << std::endl;
+  
+  if(exit_after_generate) {
+    m_consoleHandler.requestStop();
+    std::exit(0);
+  }
+
   return true;
 }
 
@@ -1857,6 +1877,7 @@ int main(int argc, char* argv[]) {
   command_line::add_arg(desc_params, arg_testnet);
   Tools::wallet_rpc_server::init_options(desc_params);
   command_line::add_arg(desc_params, arg_sync_from_zero);
+  command_line::add_arg(desc_params, arg_exit_after_generate);
 
   po::positional_options_description positional_options;
   positional_options.add(arg_command.name, -1);
