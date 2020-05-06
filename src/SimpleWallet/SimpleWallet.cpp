@@ -584,8 +584,8 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
   }
 
   std::string walletFileName;
-  sync_from_zero = command_line::get_arg(vm, arg_sync_from_zero);
-  if (sync_from_zero) {
+  m_sync_from_zero = command_line::get_arg(vm, arg_sync_from_zero);
+  if (m_sync_from_zero) {
     sync_from_height = 0;
   }
 
@@ -626,9 +626,9 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
     std::cout << RedMsg("Failed to init NodeRPCProxy: ") << YellowMsg(error.message()) << std::endl;
     return false;
   }
- 
-  sync_from_zero = command_line::get_arg(vm, arg_sync_from_zero);
-  if (sync_from_zero) {
+
+  m_sync_from_zero = command_line::get_arg(vm, arg_sync_from_zero);
+  if (m_sync_from_zero) {
     sync_from_height = 0;
   }
 
@@ -713,9 +713,9 @@ if (key_import) {
       logger(WARNING, BRIGHT_RED) << "Couldn't write wallet address file: " + walletAddressFile;
     }
   } else {
-    if(!exit_after_generate) {
+    if(!m_exit_after_generate) {
       m_wallet.reset(new WalletLegacy(m_currency, *m_node, logManager));
-      m_wallet->syncAll(sync_from_zero, 0);
+      m_wallet->syncAll(m_sync_from_zero, 0);
     }
 
     try {
@@ -732,7 +732,7 @@ if (key_import) {
     std::cout << BrightGreenMsg("Opened Wallet: ") << BrightMagentaMsg(m_wallet->getAddress()) << std::endl << std::endl;
     std::cout << YellowMsg("Use \"help\" command to see the list of available commands.\n") << std::endl;
     
-    if(exit_after_generate) {
+    if(m_exit_after_generate) {
       m_consoleHandler.requestStop();
       std::exit(0);
     }
@@ -815,7 +815,7 @@ void simple_wallet::handle_command_line(const boost::program_options::variables_
   m_daemon_address = command_line::get_arg(vm, arg_daemon_address);
   m_daemon_host = command_line::get_arg(vm, arg_daemon_host);
   m_daemon_port = command_line::get_arg(vm, arg_daemon_port);
-  exit_after_generate = command_line::get_arg(vm, arg_exit_after_generate);
+  m_exit_after_generate = command_line::get_arg(vm, arg_exit_after_generate);
 }
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string& password) {
@@ -827,7 +827,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
   try {
     m_initResultPromise.reset(new std::promise<std::error_code>());
     std::future<std::error_code> f_initError = m_initResultPromise->get_future();
-    m_wallet->syncAll(sync_from_zero, 0);
+    m_wallet->syncAll(m_sync_from_zero, 0);
     m_wallet->initAndGenerate(password);
     auto initError = f_initError.get();
     m_initResultPromise.reset(nullptr);
@@ -890,7 +890,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
             << std::endl
             << YellowMsg("If you forget to use exit, your wallet is not at risk in anyway.") << std::endl;
 
-  if(exit_after_generate) {
+  if(m_exit_after_generate) {
     m_consoleHandler.requestStop();
     std::exit(0);
   }
@@ -949,7 +949,7 @@ bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey 
             << BrightYellowMsg("current session's state. Otherwise, you will possibly need to synchronize") << std::endl
             << BrightYellowMsg("your wallet again. Your wallet key is NOT under risk anyway.") << std::endl << std::endl;
   
-  if(exit_after_generate) {
+  if(m_exit_after_generate) {
     m_consoleHandler.requestStop();
     std::exit(0);
   }

@@ -22,3 +22,11 @@ after_build:
 artifacts:
   - path: lithe-$(APPVEYOR_BUILD_NUMBER)-windows.zip
     name: Lithe-Release
+
+on_success:
+  - ps: Invoke-RestMethod https://raw.githubusercontent.com/DiscordHooks/appveyor-discord-webhook/master/send.ps1 -o send.ps1
+  - ps: ./send.ps1 success $env:DISCORD_WEBHOOK
+
+on_failure:
+  - ps: Invoke-RestMethod https://raw.githubusercontent.com/DiscordHooks/appveyor-discord-webhook/master/send.ps1 -o send.ps1
+  - ps: ./send.ps1 failure $env:DISCORD_WEBHOOK
