@@ -131,7 +131,7 @@ bool Currency::generateGenesisBlock() {
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-size_t Currency::difficultyWindowByBlockVersion(uint8_t blockMajorVersion) const {
+uint64_t Currency::difficultyWindowByBlockVersion(uint8_t blockMajorVersion) const {
   if (blockMajorVersion >= BLOCK_MAJOR_VERSION_3) {
     return parameters::DIFFICULTY_WINDOW_V3;
   } else if (blockMajorVersion >= BLOCK_MAJOR_VERSION_2) {
@@ -145,7 +145,7 @@ size_t Currency::difficultyWindowByBlockVersion(uint8_t blockMajorVersion) const
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-size_t Currency::difficultyCutByBlockVersion(uint8_t blockMajorVersion) const {
+uint64_t Currency::difficultyCutByBlockVersion(uint8_t blockMajorVersion) const {
   if (blockMajorVersion >= BLOCK_MAJOR_VERSION_2) {
     return m_difficultyCut;
   } else if (blockMajorVersion == BLOCK_MAJOR_VERSION_1) {
@@ -182,7 +182,7 @@ uint32_t Currency::upgradeHeight(uint8_t majorVersion) const {
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-bool Currency::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins,
+bool Currency::getBlockReward(uint64_t medianSize, uint64_t currentBlockSize, uint64_t alreadyGeneratedCoins,
   uint64_t fee, uint32_t height, uint64_t& reward, int64_t& emissionChange) const {
 
   assert(alreadyGeneratedCoins <= m_moneySupply);
@@ -356,9 +356,9 @@ uint64_t Currency::getTransactionFee(const Transaction& tx, uint32_t height) con
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-size_t Currency::maxBlockCumulativeSize(uint64_t height) const {
+uint64_t Currency::maxBlockCumulativeSize(uint64_t height) const {
   assert(height <= std::numeric_limits<uint64_t>::max() / m_maxBlockSizeGrowthSpeedNumerator);
-  size_t maxSize = static_cast<size_t>(m_maxBlockSizeInitial +
+  uint64_t maxSize = static_cast<uint64_t>(m_maxBlockSizeInitial +
     (height * m_maxBlockSizeGrowthSpeedNumerator) / m_maxBlockSizeGrowthSpeedDenominator);
 
   assert(maxSize >= m_maxBlockSizeInitial);
@@ -367,9 +367,9 @@ size_t Currency::maxBlockCumulativeSize(uint64_t height) const {
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-bool Currency::constructMinerTx(uint32_t height, size_t medianSize, uint64_t alreadyGeneratedCoins, size_t currentBlockSize,
+bool Currency::constructMinerTx(uint32_t height, uint64_t medianSize, uint64_t alreadyGeneratedCoins, uint64_t currentBlockSize,
   uint64_t fee, const AccountPublicAddress& minerAddress, Transaction& tx,
-  const BinaryArray& extraNonce/* = BinaryArray()*/, size_t maxOuts/* = 1*/) const {
+  const BinaryArray& extraNonce/* = BinaryArray()*/, uint64_t maxOuts/* = 1*/) const {
   tx.inputs.clear();
   tx.outputs.clear();
   tx.extra.clear();
@@ -409,7 +409,7 @@ bool Currency::constructMinerTx(uint32_t height, size_t medianSize, uint64_t alr
   }
 
   uint64_t summaryAmounts = 0;
-  for (size_t no = 0; no < outAmounts.size(); no++) {
+  for (uint64_t no = 0; no < outAmounts.size(); no++) {
     Crypto::KeyDerivation derivation = boost::value_initialized<Crypto::KeyDerivation>();
     Crypto::PublicKey outEphemeralPubKey = boost::value_initialized<Crypto::PublicKey>();
 
@@ -457,7 +457,7 @@ bool Currency::constructMinerTx(uint32_t height, size_t medianSize, uint64_t alr
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-bool Currency::isFusionTransaction(const std::vector<uint64_t>& inputsAmounts, const std::vector<uint64_t>& outputsAmounts, size_t size) const {
+bool Currency::isFusionTransaction(const std::vector<uint64_t>& inputsAmounts, const std::vector<uint64_t>& outputsAmounts, uint64_t size) const {
   if (size > fusionTxMaxSize()) {
     return false;
   }
@@ -489,7 +489,7 @@ bool Currency::isFusionTransaction(const std::vector<uint64_t>& inputsAmounts, c
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-bool Currency::isFusionTransaction(const Transaction& transaction, size_t size) const {
+bool Currency::isFusionTransaction(const Transaction& transaction, uint64_t size) const {
   assert(getObjectBinarySize(transaction) == size);
 
   std::vector<uint64_t> outputsAmounts;
@@ -590,8 +590,8 @@ bool Currency::parseAmount(const std::string& str, uint64_t& amount) const {
   std::string strAmount = str;
   boost::algorithm::trim(strAmount);
 
-  size_t pointIndex = strAmount.find_first_of('.');
-  size_t fractionSize;
+  uint64_t pointIndex = strAmount.find_first_of('.');
+  uint64_t fractionSize;
 
   if (std::string::npos != pointIndex) {
     fractionSize = strAmount.size() - pointIndex - 1;
@@ -634,7 +634,7 @@ difficulty_type Currency::nextDifficulty(std::vector<uint64_t> timestamps, std::
     cumulativeDifficulties.resize(m_difficultyWindow);
   }
 
-  size_t length = timestamps.size();
+  uint64_t length = timestamps.size();
   assert(length == cumulativeDifficulties.size());
   assert(length <= m_difficultyWindow);
   if (length <= 1) {
@@ -643,7 +643,7 @@ difficulty_type Currency::nextDifficulty(std::vector<uint64_t> timestamps, std::
 
   sort(timestamps.begin(), timestamps.end());
 
-  size_t cutBegin, cutEnd;
+  uint64_t cutBegin, cutEnd;
   assert(2 * m_difficultyCut <= m_difficultyWindow - 2);
   if (length <= m_difficultyWindow - 2 * m_difficultyCut) {
     cutBegin = 0;
@@ -757,24 +757,24 @@ bool Currency::checkProofOfWork(Crypto::cn_context& context, const Block& block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-size_t Currency::getApproximateMaximumInputCount(size_t transactionSize, size_t outputCount, size_t mixinCount) const {
-  const size_t KEY_IMAGE_SIZE = sizeof(Crypto::KeyImage);
-  const size_t OUTPUT_KEY_SIZE = sizeof(decltype(KeyOutput::key));
-  const size_t AMOUNT_SIZE = sizeof(uint64_t) + 2; // varint
-  const size_t GLOBAL_INDEXES_VECTOR_SIZE_SIZE = sizeof(uint8_t); // varint
-  const size_t GLOBAL_INDEXES_INITIAL_VALUE_SIZE = sizeof(uint32_t); // varint
-  const size_t GLOBAL_INDEXES_DIFFERENCE_SIZE = sizeof(uint32_t); // varint
-  const size_t SIGNATURE_SIZE = sizeof(Crypto::Signature);
-  const size_t EXTRA_TAG_SIZE = sizeof(uint8_t);
-  const size_t INPUT_TAG_SIZE = sizeof(uint8_t);
-  const size_t OUTPUT_TAG_SIZE = sizeof(uint8_t);
-  const size_t PUBLIC_KEY_SIZE = sizeof(Crypto::PublicKey);
-  const size_t TRANSACTION_VERSION_SIZE = sizeof(uint8_t);
-  const size_t TRANSACTION_UNLOCK_TIME_SIZE = sizeof(uint64_t);
+uint64_t Currency::getApproximateMaximumInputCount(uint64_t transactionSize, uint64_t outputCount, uint64_t mixinCount) const {
+  const uint64_t KEY_IMAGE_SIZE = sizeof(Crypto::KeyImage);
+  const uint64_t OUTPUT_KEY_SIZE = sizeof(decltype(KeyOutput::key));
+  const uint64_t AMOUNT_SIZE = sizeof(uint64_t) + 2; // varint
+  const uint64_t GLOBAL_INDEXES_VECTOR_SIZE_SIZE = sizeof(uint8_t); // varint
+  const uint64_t GLOBAL_INDEXES_INITIAL_VALUE_SIZE = sizeof(uint32_t); // varint
+  const uint64_t GLOBAL_INDEXES_DIFFERENCE_SIZE = sizeof(uint32_t); // varint
+  const uint64_t SIGNATURE_SIZE = sizeof(Crypto::Signature);
+  const uint64_t EXTRA_TAG_SIZE = sizeof(uint8_t);
+  const uint64_t INPUT_TAG_SIZE = sizeof(uint8_t);
+  const uint64_t OUTPUT_TAG_SIZE = sizeof(uint8_t);
+  const uint64_t PUBLIC_KEY_SIZE = sizeof(Crypto::PublicKey);
+  const uint64_t TRANSACTION_VERSION_SIZE = sizeof(uint8_t);
+  const uint64_t TRANSACTION_UNLOCK_TIME_SIZE = sizeof(uint64_t);
 
-  const size_t outputsSize = outputCount * (OUTPUT_TAG_SIZE + OUTPUT_KEY_SIZE + AMOUNT_SIZE);
-  const size_t headerSize = TRANSACTION_VERSION_SIZE + TRANSACTION_UNLOCK_TIME_SIZE + EXTRA_TAG_SIZE + PUBLIC_KEY_SIZE;
-  const size_t inputSize = INPUT_TAG_SIZE + AMOUNT_SIZE + KEY_IMAGE_SIZE + SIGNATURE_SIZE + GLOBAL_INDEXES_VECTOR_SIZE_SIZE +
+  const uint64_t outputsSize = outputCount * (OUTPUT_TAG_SIZE + OUTPUT_KEY_SIZE + AMOUNT_SIZE);
+  const uint64_t headerSize = TRANSACTION_VERSION_SIZE + TRANSACTION_UNLOCK_TIME_SIZE + EXTRA_TAG_SIZE + PUBLIC_KEY_SIZE;
+  const uint64_t inputSize = INPUT_TAG_SIZE + AMOUNT_SIZE + KEY_IMAGE_SIZE + SIGNATURE_SIZE + GLOBAL_INDEXES_VECTOR_SIZE_SIZE +
     GLOBAL_INDEXES_INITIAL_VALUE_SIZE + mixinCount * (GLOBAL_INDEXES_DIFFERENCE_SIZE + SIGNATURE_SIZE);
 
   return (transactionSize - headerSize - outputsSize) / inputSize;
@@ -862,10 +862,10 @@ Transaction CurrencyBuilder::generateGenesisTransaction() {
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-CurrencyBuilder& CurrencyBuilder::numberOfDecimalPlaces(size_t val) {
+CurrencyBuilder& CurrencyBuilder::numberOfDecimalPlaces(uint64_t val) {
   m_currency.m_numberOfDecimalPlaces = val;
   m_currency.m_coin = 1;
-  for (size_t i = 0; i < m_currency.m_numberOfDecimalPlaces; ++i) {
+  for (uint64_t i = 0; i < m_currency.m_numberOfDecimalPlaces; ++i) {
     m_currency.m_coin *= 10;
   }
 
@@ -874,7 +874,7 @@ CurrencyBuilder& CurrencyBuilder::numberOfDecimalPlaces(size_t val) {
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-CurrencyBuilder& CurrencyBuilder::difficultyWindow(size_t val) {
+CurrencyBuilder& CurrencyBuilder::difficultyWindow(uint64_t val) {
   if (val < 2) {
     throw std::invalid_argument("val at difficultyWindow()");
   }

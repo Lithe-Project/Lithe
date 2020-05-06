@@ -222,7 +222,7 @@ bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req, C
     res.blocks.back().block = asString(toBinaryArray(completeBlock->getBlock()));
 
     res.blocks.back().txs.reserve(completeBlock->getTransactionCount());
-    for (size_t i = 0; i < completeBlock->getTransactionCount(); ++i) {
+    for (uint64_t i = 0; i < completeBlock->getTransactionCount(); ++i) {
       res.blocks.back().txs.push_back(asString(toBinaryArray(completeBlock->getTransaction(i))));
     }
   }
@@ -273,7 +273,7 @@ bool RpcServer::setFeeAddress(const std::string& fee_address, const AccountPubli
 
 bool RpcServer::setViewKey(const std::string& view_key) {
   Crypto::Hash private_view_key_hash;
-  size_t size;
+  uint64_t size;
   if (!Common::fromHex(view_key, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_view_key_hash)) {
     logger(DEBUGGING) << "Could not parse private view key";
     std::cout << RedMsg("Could not parse private view key.") << std::endl;
@@ -346,7 +346,7 @@ bool RpcServer::onGetPoolChanges(const COMMAND_RPC_GET_POOL_CHANGES::request& re
       break;;
     }
 
-    rsp.addedTxs.emplace_back(std::move(txBlob));
+    rsp.addedTxs.push_back(std::move(txBlob));
   }
   return true;
 }
@@ -518,7 +518,7 @@ bool RpcServer::on_start_mining(const COMMAND_RPC_START_MINING::request& req, CO
     return true;
   }
 
-  if (!m_core.get_miner().start(adr, static_cast<size_t>(req.threads_count))) {
+  if (!m_core.get_miner().start(adr, static_cast<uint64_t>(req.threads_count))) {
     res.status = "Failed, mining not started";
     return true;
   }
@@ -570,10 +570,10 @@ bool RpcServer::f_on_blocks_list_json(const F_COMMAND_RPC_GET_BLOCKS_LIST::reque
         "Internal error: can't get block by height. Height = " + std::to_string(i) + '.' };
     }
 
-    size_t tx_cumulative_block_size;
+    uint64_t tx_cumulative_block_size;
     m_core.getBlockSize(block_hash, tx_cumulative_block_size);
-    size_t blokBlobSize = getObjectBinarySize(blk);
-    size_t minerTxBlobSize = getObjectBinarySize(blk.baseTransaction);
+    uint64_t blokBlobSize = getObjectBinarySize(blk);
+    uint64_t minerTxBlobSize = getObjectBinarySize(blk.baseTransaction);
 
     f_block_short_response block_short;
     block_short.cumul_size = blokBlobSize + tx_cumulative_block_size - minerTxBlobSize;
@@ -630,20 +630,20 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
 
   res.block.reward = block_header.reward;
 
-  std::vector<size_t> blocksSizes;
+  std::vector<uint64_t> blocksSizes;
   if (!m_core.getBackwardBlocksSizes(res.block.height, blocksSizes, parameters::CRYPTONOTE_REWARD_BLOCKS_WINDOW)) {
     return false;
   }
   res.block.sizeMedian = Common::medianValue(blocksSizes);
 
-  size_t blockSize = 0;
+  uint64_t blockSize = 0;
   if (!m_core.getBlockSize(hash, blockSize)) {
     return false;
   }
   res.block.transactionsCumulativeSize = blockSize;
 
-  size_t blokBlobSize = getObjectBinarySize(blk);
-  size_t minerTxBlobSize = getObjectBinarySize(blk.baseTransaction);
+  uint64_t blokBlobSize = getObjectBinarySize(blk);
+  uint64_t minerTxBlobSize = getObjectBinarySize(blk.baseTransaction);
   res.block.blockSize = blokBlobSize + res.block.transactionsCumulativeSize - minerTxBlobSize;
 
   uint64_t alreadyGeneratedCoins;
@@ -666,12 +666,12 @@ bool RpcServer::f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& 
   uint64_t currentReward = 0;
   int64_t emissionChange = 0;
   bool penalizeFee = blk.majorVersion >= 2;
-  size_t blockGrantedFullRewardZone = penalizeFee ?
+  uint64_t blockGrantedFullRewardZone = penalizeFee ?
   m_core.currency().blockGrantedFullRewardZone() :
   //m_core.currency().blockGrantedFullRewardZoneV1();
   res.block.effectiveSizeMedian = std::max(res.block.sizeMedian, blockGrantedFullRewardZone);
 
-  // virtual bool getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint32_t height,
+  // virtual bool getBlockReward(uint64_t medianSize, uint64_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint32_t height,
                               // uint64_t& reward, int64_t& emissionChange) = 0;
 
   if (!m_core.getBlockReward(res.block.sizeMedian, 0, prevBlockGeneratedCoins, 0, res.block.height, maxReward, emissionChange)) {
@@ -764,10 +764,10 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
   if (m_core.getBlockContainingTx(hash, blockHash, blockHeight)) {
     Block blk;
     if (m_core.getBlockByHash(blockHash, blk)) {
-      size_t tx_cumulative_block_size;
+      uint64_t tx_cumulative_block_size;
       m_core.getBlockSize(blockHash, tx_cumulative_block_size);
-      size_t blokBlobSize = getObjectBinarySize(blk);
-      size_t minerTxBlobSize = getObjectBinarySize(blk.baseTransaction);
+      uint64_t blokBlobSize = getObjectBinarySize(blk);
+      uint64_t minerTxBlobSize = getObjectBinarySize(blk.baseTransaction);
       f_block_short_response block_short;
 
       block_short.cumul_size = blokBlobSize + tx_cumulative_block_size - minerTxBlobSize;
@@ -873,7 +873,7 @@ bool RpcServer::on_getblockhash(const COMMAND_RPC_GETBLOCKHASH::request& req, CO
 }
 
 namespace {
-  uint64_t slow_memmem(void* start_buff, size_t buflen, void* pat, size_t patlen)
+  uint64_t slow_memmem(void* start_buff, uint64_t buflen, void* pat, uint64_t patlen)
   {
     void* buf = start_buff;
     void* end = (char*)buf + buflen - patlen;

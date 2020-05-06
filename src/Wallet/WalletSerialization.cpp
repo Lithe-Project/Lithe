@@ -901,7 +901,7 @@ void WalletSerializer::loadTransfers(Common::IInputStream& source, CryptoContext
 }
 
 void WalletSerializer::addWalletV1Details(const std::vector<WalletLegacyTransaction>& txs, const std::vector<WalletLegacyTransfer>& trs) {
-  size_t txId = 0;
+  uint64_t txId = 0;
   m_transfers.reserve(trs.size());
 
   for (const auto& tx: txs) {
@@ -909,8 +909,8 @@ void WalletSerializer::addWalletV1Details(const std::vector<WalletLegacyTransact
     m_transactions.get<RandomAccessIndex>().push_back(std::move(mtx));
 
     if (tx.firstTransferId != WALLET_LEGACY_INVALID_TRANSFER_ID && tx.transferCount != 0) {
-      size_t firstTr = tx.firstTransferId;
-      size_t lastTr = firstTr + tx.transferCount;
+      uint64_t firstTr = tx.firstTransferId;
+      uint64_t lastTr = firstTr + tx.transferCount;
 
       if (lastTr > trs.size()) {
         throw std::system_error(make_error_code(error::INTERNAL_WALLET_ERROR));

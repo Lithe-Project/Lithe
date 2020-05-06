@@ -129,7 +129,7 @@ namespace Tools
   bool PasswordContainer::read_from_file()
   {
     m_password.reserve(max_password_size);
-    for (size_t i = 0; i < max_password_size; ++i)
+    for (uint64_t i = 0; i < max_password_size; ++i)
     {
       char ch = static_cast<char>(std::cin.get());
       if (std::cin.eof() || ch == '\n' || ch == '\r')

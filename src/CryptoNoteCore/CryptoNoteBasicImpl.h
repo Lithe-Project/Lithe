@@ -17,9 +17,9 @@ namespace CryptoNote {
   /*                                                                      */
   /************************************************************************/
   template<class t_array>
-  struct array_hasher: std::unary_function<t_array&, size_t>
+  struct array_hasher: std::unary_function<t_array&, uint64_t>
   {
-    size_t operator()(const t_array& val) const
+    uint64_t operator()(const t_array& val) const
     {
       return boost::hash_range(&val.data[0], &val.data[sizeof(val.data)]);
     }
@@ -28,7 +28,7 @@ namespace CryptoNote {
   /************************************************************************/
   /* CryptoNote helper functions                                          */
   /************************************************************************/
-  uint64_t getPenalizedAmount(uint64_t amount, size_t medianSize, size_t currentBlockSize);
+  uint64_t getPenalizedAmount(uint64_t amount, uint64_t medianSize, uint64_t currentBlockSize);
   std::string getAccountAddressAsStr(uint64_t prefix, const AccountPublicAddress& adr);
   bool parseAccountAddressString(uint64_t& prefix, AccountPublicAddress& adr, const std::string& str);
   bool is_coinbase(const Transaction& tx);

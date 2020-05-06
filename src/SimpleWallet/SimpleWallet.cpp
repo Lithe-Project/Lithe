@@ -77,7 +77,7 @@ const command_line::arg_descriptor<std::vector<std::string>> arg_command = { "co
 
 bool parseUrlAddress(const std::string& url, std::string& address, uint16_t& port) {
   auto pos = url.find("://");
-  size_t addrStart = 0;
+  uint64_t addrStart = 0;
 
   if (pos != std::string::npos) {
     addrStart = pos + 3;
@@ -233,21 +233,21 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
   }
 }
 
-std::string makeCenteredString(size_t width, const std::string& text) {
+std::string makeCenteredString(uint64_t width, const std::string& text) {
   if (text.size() >= width) {
     return text;
   }
 
-  size_t offset = (width - text.size() + 1) / 2;
+  uint64_t offset = (width - text.size() + 1) / 2;
   return std::string(offset, ' ') + text + std::string(width - text.size() - offset, ' ');
 }
 
-const size_t TIMESTAMP_MAX_WIDTH = 19;
-const size_t HASH_MAX_WIDTH = 64;
-const size_t TOTAL_AMOUNT_MAX_WIDTH = 20;
-const size_t FEE_MAX_WIDTH = 14;
-const size_t BLOCK_MAX_WIDTH = 7;
-const size_t UNLOCK_TIME_MAX_WIDTH = 11;
+const uint64_t TIMESTAMP_MAX_WIDTH = 19;
+const uint64_t HASH_MAX_WIDTH = 64;
+const uint64_t TOTAL_AMOUNT_MAX_WIDTH = 20;
+const uint64_t FEE_MAX_WIDTH = 14;
+const uint64_t BLOCK_MAX_WIDTH = 7;
+const uint64_t UNLOCK_TIME_MAX_WIDTH = 11;
 
 void printListTransfersHeader(LoggerRef& logger) {
   std::string header = makeCenteredString(TIMESTAMP_MAX_WIDTH, "timestamp (UTC)") + "  ";
@@ -693,7 +693,7 @@ if (key_import) {
 if (key_import) {
     Crypto::Hash private_spend_key_hash;
     Crypto::Hash private_view_key_hash;
-    size_t size;
+    uint64_t size;
     if (!Common::fromHex(private_spend_key_string, &private_spend_key_hash, sizeof(private_spend_key_hash), size) || size != sizeof(private_spend_key_hash)) {
       return false;
     }
@@ -1029,7 +1029,7 @@ bool simple_wallet::start_mining(const std::vector<std::string>& args) {
   req.miner_address = m_wallet->getAddress();
 
   bool ok = true;
-  size_t max_mining_threads_count = (std::max)(std::thread::hardware_concurrency(), static_cast<unsigned>(2));
+  uint64_t max_mining_threads_count = (std::max)(std::thread::hardware_concurrency(), static_cast<unsigned>(2));
   if (0 == args.size()) {
     req.threads_count = 1;
   } else if (1 == args.size()) {
@@ -1183,7 +1183,7 @@ bool simple_wallet::verify_signature(const std::vector<std::string>& args) {
   }
   
   std::string encodedSig = args[2];
-  const size_t prefix_size = strlen("Sig");
+  const uint64_t prefix_size = strlen("Sig");
   
   if (encodedSig.substr(0, prefix_size) != "Sig") {
     logger(DEBUGGING) << "Invalid signature prefix.";
@@ -1308,8 +1308,8 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::show_incoming_transfers(const std::vector<std::string>& args) {
   bool hasTransfers = false;
-  size_t transactionsCount = m_wallet->getTransactionCount();
-  for (size_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) {
+  uint64_t transactionsCount = m_wallet->getTransactionCount();
+  for (uint64_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) {
     WalletLegacyTransaction txInfo;
     m_wallet->getTransaction(trantransactionNumber, txInfo);
     if (txInfo.totalAmount < 0) continue;
@@ -1326,8 +1326,8 @@ bool simple_wallet::show_incoming_transfers(const std::vector<std::string>& args
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::show_outgoing_transfers(const std::vector<std::string>& args) {
   bool hasTransfers = false;
-  size_t transactionsCount = m_wallet->getTransactionCount();
-  for (size_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) {
+  uint64_t transactionsCount = m_wallet->getTransactionCount();
+  for (uint64_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) {
     WalletLegacyTransaction txInfo;
     m_wallet->getTransaction(trantransactionNumber, txInfo);
     if (txInfo.totalAmount > 0) continue;
@@ -1359,8 +1359,8 @@ bool simple_wallet::listTransfers(const std::vector<std::string>& args) {
     blockHeight = atoi(blockHeightString.c_str());
   }
 
-  size_t transactionsCount = m_wallet->getTransactionCount();
-  for (size_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) 
+  uint64_t transactionsCount = m_wallet->getTransactionCount();
+  for (uint64_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) 
   {
     
     m_wallet->getTransaction(trantransactionNumber, txInfo);
@@ -1747,7 +1747,7 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
     std::vector<TransactionMessage> messages;
     for (auto dst : cmd.dsts) {
       for (auto msg : cmd.messages) {
-        messages.emplace_back(TransactionMessage{ msg, dst.address });
+        messages.push_back(TransactionMessage{ msg, dst.address });
       }
     }
 

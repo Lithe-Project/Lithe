@@ -18,7 +18,7 @@ namespace CryptoNote
   {
     public:
       const CryptoNote::Currency& m_currency;
-      size_t fake_outs_count;
+      uint64_t fake_outs_count;
       std::vector<CryptoNote::WalletLegacyTransfer> dsts;
       std::vector<uint8_t> extra;
       uint64_t fee;
