@@ -22,6 +22,9 @@
 #include <boost/format.hpp>
 #include "Rpc/RpcServer.h"
 
+#include <tabulate/table.hpp>
+using namespace tabulate;
+
 namespace {
   template <typename T>
   static bool print_as_json(const T& obj) {
@@ -29,7 +32,6 @@ namespace {
     return true;
   }
 }
-
 
 DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core& core, CryptoNote::NodeServer& srv, Logging::LoggerManager& log, CryptoNote::RpcServer* prpc_server) :
   m_core(core), m_srv(srv), logger(log, "daemon"), m_logManager(log), m_prpc_server(prpc_server) {
@@ -64,7 +66,44 @@ std::string DaemonCommandsHandler::get_commands_str()
   ss << usage << ENDL;
   return ss.str();
 }
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::status(const std::vector<std::string>& args)
+{
+  CryptoNote::COMMAND_RPC_GET_INFO::request req;
+  CryptoNote::COMMAND_RPC_GET_INFO::response resp;
+  Table statusTable;
 
+  /* dont show us status if status cant be done */
+  if (!m_prpc_server->on_get_info(req, resp) || resp.status != CORE_RPC_STATUS_OK) {
+    std::cout << "Problem retreiving information from RPC server." << std::endl;
+  }
+
+  /* uptime to string */
+  std::time_t uptime = std::time(nullptr) - resp.start_time;
+  std::string uptimeDay = std::to_string((unsigned int)floor(uptime / 60.0 / 60.0 / 24.0));
+  std::string uptimeHrs = std::to_string((unsigned int)floor(fmod((uptime / 60.0 / 60.0), 24.0)));
+  std::string uptimeMin = std::to_string((unsigned int)floor(fmod((uptime / 60.0), 60.0)));
+  std::string uptimeSec = std::to_string((unsigned int)fmod(uptime, 60.0));
+
+  /* statusTable items */
+  statusTable.add_row({"Height", std::to_string(resp.height)});
+  statusTable.add_row({"BC Height", std::to_string(resp.last_known_block_index)});
+  statusTable.add_row({"Syned", get_sync_percentage(resp.height, resp.last_known_block_index)});
+  statusTable.add_row({"Net Type", (m_core.currency().isTestnet() ? "Testnet" : "Mainnet")});
+  statusTable.add_row({"Incoming", std::to_string(resp.incoming_connections_count) + " connections"});
+  statusTable.add_row({"Outgoing", std::to_string(resp.outgoing_connections_count) + " connections"});
+  statusTable.add_row({"Uptime", uptimeDay + "d " + uptimeHrs + "h " + uptimeMin + "m " + uptimeSec + "s"});
+
+  /* format statusTable */
+  statusTable.column(0).format().font_align(FontAlign::center).font_color(Color::green);
+  statusTable.column(1).format().font_align(FontAlign::center).font_color(Color::magenta);
+  statusTable.format().corner_color(Color::grey).border_color(Color::grey);
+
+  /* print statusTable */
+  std::cout << statusTable << std::endl;
+
+  return true;
+}
 //--------------------------------------------------------------------------------
 std::string DaemonCommandsHandler::get_mining_speed(uint32_t hr)
 {
@@ -72,29 +111,6 @@ std::string DaemonCommandsHandler::get_mining_speed(uint32_t hr)
   if (hr>1e6) return (boost::format("%.2f MH/s") % (hr/1e6)).str();
   if (hr>1e3) return (boost::format("%.2f kH/s") % (hr/1e3)).str();
   return (boost::format("%.0f H/s") % hr).str();
-}
-//--------------------------------------------------------------------------------
-bool DaemonCommandsHandler::status(const std::vector<std::string>& args)
-{
-  CryptoNote::COMMAND_RPC_GET_INFO::request req;
-  CryptoNote::COMMAND_RPC_GET_INFO::response resp;
-
-  if (!m_prpc_server->on_get_info(req, resp) || resp.status != CORE_RPC_STATUS_OK) {
-    std::cout << "Problem retreiving information from RPC server." << std::endl;
-  }
-
-  std::time_t uptime = std::time(nullptr) - resp.start_time;
-
-  std::cout 
-    << "Height: " << resp.height << "/" << resp.last_known_block_index << " (" << get_sync_percentage(resp.height, resp.last_known_block_index) << "%), "
-    << (resp.synced ? "synced, " : "syncing, ") << "on " << (m_core.currency().isTestnet() ? "testnet, " : "mainnet, ")
-    << "net hash " << get_mining_speed(resp.hashrate) << ", " 
-    << resp.outgoing_connections_count << "(out)+" << resp.incoming_connections_count << "(in) connections, "
-    << "uptime " << (unsigned int)floor(uptime / 60.0 / 60.0 / 24.0) << "d " << (unsigned int)floor(fmod((uptime / 60.0 / 60.0), 24.0)) << "h "
-    << (unsigned int)floor(fmod((uptime / 60.0), 60.0)) << "m " << (unsigned int)fmod(uptime, 60.0) << "s"
-    << std::endl;
-
-  return true;
 }
 //--------------------------------------------------------------------------------
 std::string DaemonCommandsHandler::get_sync_percentage(uint64_t height, uint64_t target_height) {
