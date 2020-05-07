@@ -49,7 +49,9 @@ public:
   typedef std::function<bool(const std::vector<std::string> &)> ConsoleCommandHandler;
 
   std::string getUsage() const;
+  std::string getUsageAdv() const;
   void setHandler(const std::string& command, const ConsoleCommandHandler& handler, const std::string& usage = "");
+  void setHandlerAdv(const std::string& command, const ConsoleCommandHandler& handler, const std::string& usage = "");
   void requestStop();
   bool runCommand(const std::vector<std::string>& cmdAndArgs);
 
@@ -69,6 +71,7 @@ private:
   std::string m_prompt;
   Console::Color m_promptColor = Console::Color::Default;
   CommandHandlersMap m_handlers;
+  CommandHandlersMap m_handlersadv;
   AsyncConsoleReader m_consoleReader;
 };
 

@@ -88,7 +88,7 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args)
   /* statusTable items */
   statusTable.add_row({"Height", std::to_string(resp.height)});
   statusTable.add_row({"BC Height", std::to_string(resp.last_known_block_index)});
-  statusTable.add_row({"Syned", get_sync_percentage(resp.height, resp.last_known_block_index)});
+  statusTable.add_row({"Syned", get_sync_percentage(resp.height, resp.last_known_block_index) + "%"});
   statusTable.add_row({"Net Type", (m_core.currency().isTestnet() ? "Testnet" : "Mainnet")});
   statusTable.add_row({"Incoming", std::to_string(resp.incoming_connections_count) + " connections"});
   statusTable.add_row({"Outgoing", std::to_string(resp.outgoing_connections_count) + " connections"});

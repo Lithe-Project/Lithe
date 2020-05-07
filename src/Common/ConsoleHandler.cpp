@@ -170,8 +170,31 @@ std::string ConsoleHandler::getUsage() const {
   return ss.str();
 }
 
+std::string ConsoleHandler::getUsageAdv() const {
+
+  if (m_handlersadv.empty()) {
+    return std::string();
+  }
+  
+  std::stringstream ss;
+
+  uint64_t maxlen = std::max_element(m_handlersadv.begin(), m_handlersadv.end(), [](
+    CommandHandlersMap::const_reference& a, CommandHandlersMap::const_reference& b) { 
+      return a.first.size() < b.first.size(); })->first.size();
+
+  for (auto& x : m_handlersadv) {
+    ss << std::left << std::setw(maxlen + 3) << x.first << x.second.second << std::endl;
+  }
+
+  return ss.str();
+}
+
 void ConsoleHandler::setHandler(const std::string& command, const ConsoleCommandHandler& handler, const std::string& usage) {
   m_handlers[command] = std::make_pair(handler, usage);
+}
+
+void ConsoleHandler::setHandlerAdv(const std::string& command, const ConsoleCommandHandler& handler, const std::string& usage) {
+  m_handlersadv[command] = std::make_pair(handler, usage);
 }
 
 bool ConsoleHandler::runCommand(const std::vector<std::string>& cmdAndArgs) {
