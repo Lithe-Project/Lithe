@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.8)
 
 set(VERSION "0.0.4")
-set(BUILD_ID 30)
+set(BUILD_ID 38)
 set(REFS " (HEAD -> master)")
 
 # Enable c++17
