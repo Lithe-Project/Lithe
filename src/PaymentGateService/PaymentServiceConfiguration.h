@@ -29,6 +29,7 @@ struct Configuration {
   uint16_t bindPort;
   std::string rpcUser;
   std::string rpcPassword;
+  bool legacySecurity;
 
   std::string containerFile;
   std::string containerPassword;
@@ -42,7 +43,7 @@ struct Configuration {
   bool testnet;
   bool printAddresses;
 
-  size_t logLevel;
+  uint64_t logLevel;
 };
 
 } //namespace PaymentService

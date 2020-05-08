@@ -15,7 +15,7 @@ namespace Tools
   class PasswordContainer
   {
   public:
-    static const size_t max_password_size = 1024;
+    static const uint64_t max_password_size = 1024;
 
     PasswordContainer();
     PasswordContainer(std::string&& password);

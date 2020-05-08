@@ -264,7 +264,7 @@ using CryptoNote::ISerializer;
 
     struct response
     {
-      size_t num_unlocked_outputs;
+      uint64_t num_unlocked_outputs;
 
       void serialize(ISerializer& s) {
         KV_MEMBER(num_unlocked_outputs)
@@ -302,7 +302,7 @@ using CryptoNote::ISerializer;
 
     struct response
     {
-      size_t fusion_ready_count;
+      uint64_t fusion_ready_count;
 
       void serialize(ISerializer& s) {
         KV_MEMBER(fusion_ready_count)

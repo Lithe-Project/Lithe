@@ -48,6 +48,7 @@ namespace CryptoNote
 
     bool process_command(const std::vector<std::string> &args);
     std::string get_commands_str();
+    std::string get_adv_commands_str();
     std::string getFeeAddress();
 
     const CryptoNote::Currency& currency() const { return m_currency; }
@@ -69,6 +70,7 @@ namespace CryptoNote
     bool confirmTransaction(TransferCommand, bool);
 
     bool help(const std::vector<std::string> &args = std::vector<std::string>());
+    bool advanced(const std::vector<std::string> &args = std::vector<std::string>());
     bool exit(const std::vector<std::string> &args);
     bool start_mining(const std::vector<std::string> &args);
     bool show_dust(const std::vector<std::string> &args);

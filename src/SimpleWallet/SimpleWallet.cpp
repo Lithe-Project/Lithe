@@ -48,6 +48,9 @@
 
 #include <Logging/LoggerManager.h>
 
+#include <tabulate/table.hpp>
+using namespace tabulate;
+
 #if defined(WIN32)
 #include <crtdbg.h>
 #endif
@@ -77,7 +80,7 @@ const command_line::arg_descriptor<std::vector<std::string>> arg_command = { "co
 
 bool parseUrlAddress(const std::string& url, std::string& address, uint16_t& port) {
   auto pos = url.find("://");
-  size_t addrStart = 0;
+  uint64_t addrStart = 0;
 
   if (pos != std::string::npos) {
     addrStart = pos + 3;
@@ -233,21 +236,21 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
   }
 }
 
-std::string makeCenteredString(size_t width, const std::string& text) {
+std::string makeCenteredString(uint64_t width, const std::string& text) {
   if (text.size() >= width) {
     return text;
   }
 
-  size_t offset = (width - text.size() + 1) / 2;
+  uint64_t offset = (width - text.size() + 1) / 2;
   return std::string(offset, ' ') + text + std::string(width - text.size() - offset, ' ');
 }
 
-const size_t TIMESTAMP_MAX_WIDTH = 19;
-const size_t HASH_MAX_WIDTH = 64;
-const size_t TOTAL_AMOUNT_MAX_WIDTH = 20;
-const size_t FEE_MAX_WIDTH = 14;
-const size_t BLOCK_MAX_WIDTH = 7;
-const size_t UNLOCK_TIME_MAX_WIDTH = 11;
+const uint64_t TIMESTAMP_MAX_WIDTH = 19;
+const uint64_t HASH_MAX_WIDTH = 64;
+const uint64_t TOTAL_AMOUNT_MAX_WIDTH = 20;
+const uint64_t FEE_MAX_WIDTH = 14;
+const uint64_t BLOCK_MAX_WIDTH = 7;
+const uint64_t UNLOCK_TIME_MAX_WIDTH = 11;
 
 void printListTransfersHeader(LoggerRef& logger) {
   std::string header = makeCenteredString(TIMESTAMP_MAX_WIDTH, "timestamp (UTC)") + "  ";
@@ -400,8 +403,18 @@ bool processServerFeeAddressResponse(const std::string& response, std::string& f
 
 std::string simple_wallet::get_commands_str() {
   std::stringstream ss;
-  ss << "Commands: " << ENDL;
+  ss << "Basic Commands: " << ENDL;
   std::string usage = m_consoleHandler.getUsage();
+  boost::replace_all(usage, "\n", "\n  ");
+  usage.insert(0, "  ");
+  ss << usage << ENDL;
+  return ss.str();
+}
+
+std::string simple_wallet::get_adv_commands_str() {
+  std::stringstream ss;
+  ss << "Advanced Commands: " << ENDL;
+  std::string usage = m_consoleHandler.getUsageAdv();
   boost::replace_all(usage, "\n", "\n  ");
   usage.insert(0, "  ");
   ss << usage << ENDL;
@@ -410,6 +423,11 @@ std::string simple_wallet::get_commands_str() {
 
 bool simple_wallet::help(const std::vector<std::string> &args) {
   std::cout << get_commands_str() << std::endl;
+  return true;
+}
+
+bool simple_wallet::advanced(const std::vector<std::string> &args) {
+  std::cout << get_adv_commands_str() << std::endl;
   return true;
 }
 
@@ -427,29 +445,30 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_refresh_progress_reporter(*this),
   m_initResultPromise(nullptr),
   m_walletSynchronized(false) {
-  m_consoleHandler.setHandler("create_integrated", boost::bind(&simple_wallet::create_integrated, this, _1), "create_integrated <payment_id> - Create an integrated address with a payment ID");
-  m_consoleHandler.setHandler("export_keys", boost::bind(&simple_wallet::export_keys, this, _1), "Show the secret keys of the current wallet");
   m_consoleHandler.setHandler("balance", boost::bind(&simple_wallet::show_balance, this, _1), "Show current wallet balance");
-  m_consoleHandler.setHandler("sign_message", boost::bind(&simple_wallet::sign_message, this, _1), "Sign a message with your wallet keys");
-  m_consoleHandler.setHandler("verify_signature", boost::bind(&simple_wallet::verify_signature, this, _1), "Verify a signed message");
   m_consoleHandler.setHandler("incoming_transfers", boost::bind(&simple_wallet::show_incoming_transfers, this, _1), "Show incoming transfers");
   m_consoleHandler.setHandler("outgoing_transfers", boost::bind(&simple_wallet::show_outgoing_transfers, this, _1), "Show outgoing transfers");
   m_consoleHandler.setHandler("list_transfers", boost::bind(&simple_wallet::listTransfers, this, _1), "list_transfers <height> - Show all known transfers from a certain (optional) block height");
-  m_consoleHandler.setHandler("payments", boost::bind(&simple_wallet::show_payments, this, _1), "payments <payment_id_1> [<payment_id_2> ... <payment_id_N>] - Show payments <payment_id_1>, ... <payment_id_N>");
   m_consoleHandler.setHandler("bc_height", boost::bind(&simple_wallet::show_blockchain_height, this, _1), "Show blockchain height");
-  m_consoleHandler.setHandler("show_dust", boost::bind(&simple_wallet::show_dust, this, _1), "Show the number of unmixable dust outputs");
-  m_consoleHandler.setHandler("outputs", boost::bind(&simple_wallet::show_num_unlocked_outputs, this, _1), "Show the number of unlocked outputs available for a transaction");
-  m_consoleHandler.setHandler("optimize", boost::bind(&simple_wallet::optimize_outputs, this, _1), "Combine many available outputs into a few by sending a transaction to self");
-  m_consoleHandler.setHandler("optimize_all", boost::bind(&simple_wallet::optimize_all_outputs, this, _1), "Optimize your wallet several times so you can send large transactions");  
   m_consoleHandler.setHandler("transfer", boost::bind(&simple_wallet::transfer, this, _1),
     "transfer <addr_1> <amount_1> [<addr_2> <amount_2> ... <addr_N> <amount_N>] [-p payment_id]"
     " - Transfer <amount_1>,... <amount_N> to <address_1>,... <address_N>, respectively. ");
-  m_consoleHandler.setHandler("set_log", boost::bind(&simple_wallet::set_log, this, _1), "set_log <level> - Change current log level, <level> is a number 0-4");
   m_consoleHandler.setHandler("address", boost::bind(&simple_wallet::print_address, this, _1), "Show current wallet public address");
   m_consoleHandler.setHandler("save", boost::bind(&simple_wallet::save, this, _1), "Save wallet synchronized data");
   m_consoleHandler.setHandler("reset", boost::bind(&simple_wallet::reset, this, _1), "Discard cache data and start synchronizing from the start");
-  m_consoleHandler.setHandler("help", boost::bind(&simple_wallet::help, this, _1), "Show this help");
+  m_consoleHandler.setHandler("help", boost::bind(&simple_wallet::help, this, _1), "Show the Basic commands menu.");
   m_consoleHandler.setHandler("exit", boost::bind(&simple_wallet::exit, this, _1), "Close wallet");
+  m_consoleHandler.setHandler("advanced", boost::bind(&simple_wallet::advanced, this, _1), "Shows the Advanced commands menu.");
+  m_consoleHandler.setHandlerAdv("optimize", boost::bind(&simple_wallet::optimize_outputs, this, _1), "Combine many available outputs into a few by sending a transaction to self");
+  m_consoleHandler.setHandlerAdv("optimize_all", boost::bind(&simple_wallet::optimize_all_outputs, this, _1), "Optimize your wallet several times so you can send large transactions");
+  m_consoleHandler.setHandlerAdv("set_log", boost::bind(&simple_wallet::set_log, this, _1), "set_log <level> - Change current log level, <level> is a number 0-4");
+  m_consoleHandler.setHandlerAdv("outputs", boost::bind(&simple_wallet::show_num_unlocked_outputs, this, _1), "Show the number of unlocked outputs available for a transaction"); 
+  m_consoleHandler.setHandlerAdv("payments", boost::bind(&simple_wallet::show_payments, this, _1), "payments <payment_id_1> [<payment_id_2> ... <payment_id_N>] - Show payments <payment_id_1>, ... <payment_id_N>");
+  m_consoleHandler.setHandlerAdv("create_integrated", boost::bind(&simple_wallet::create_integrated, this, _1), "create_integrated <payment_id> - Create an integrated address with a payment ID");
+  m_consoleHandler.setHandlerAdv("export_keys", boost::bind(&simple_wallet::export_keys, this, _1), "Show the secret keys of the current wallet");
+  m_consoleHandler.setHandlerAdv("sign_message", boost::bind(&simple_wallet::sign_message, this, _1), "Sign a message with your wallet keys");
+  m_consoleHandler.setHandlerAdv("verify_signature", boost::bind(&simple_wallet::verify_signature, this, _1), "Verify a signed message");
+  m_consoleHandler.setHandlerAdv("show_dust", boost::bind(&simple_wallet::show_dust, this, _1), "Show the number of unmixable dust outputs");
 }
 
 /* This function shows the number of outputs in the wallet
@@ -693,7 +712,7 @@ if (key_import) {
 if (key_import) {
     Crypto::Hash private_spend_key_hash;
     Crypto::Hash private_view_key_hash;
-    size_t size;
+    uint64_t size;
     if (!Common::fromHex(private_spend_key_string, &private_spend_key_hash, sizeof(private_spend_key_hash), size) || size != sizeof(private_spend_key_hash)) {
       return false;
     }
@@ -1029,7 +1048,7 @@ bool simple_wallet::start_mining(const std::vector<std::string>& args) {
   req.miner_address = m_wallet->getAddress();
 
   bool ok = true;
-  size_t max_mining_threads_count = (std::max)(std::thread::hardware_concurrency(), static_cast<unsigned>(2));
+  uint64_t max_mining_threads_count = (std::max)(std::thread::hardware_concurrency(), static_cast<unsigned>(2));
   if (0 == args.size()) {
     req.threads_count = 1;
   } else if (1 == args.size()) {
@@ -1149,10 +1168,49 @@ void simple_wallet::synchronizationProgressUpdated(uint32_t current, uint32_t to
 }
 
 bool simple_wallet::show_balance(const std::vector<std::string>& args) {
-  std::cout << std::endl
-            << BrightGreenMsg("Available Balance: ") << BrightMagentaMsg(m_currency.formatAmount(m_wallet->actualBalance())) << std::endl
-            << BrightGreenMsg("Locked Balance: ") << BrightMagentaMsg(m_currency.formatAmount(m_wallet->pendingBalance())) << std::endl
-            << BrightGreenMsg("Total Balance: ") << BrightMagentaMsg(m_currency.formatAmount(m_wallet->actualBalance() + m_wallet->pendingBalance())) << std::endl;
+  Table avaBalTab;
+  avaBalTab.add_row({"Available Balance: ", m_currency.formatAmount(m_wallet->actualBalance()) + " $LXTH"});
+  avaBalTab.format()
+    .font_align(FontAlign::center)
+    .border_top("═")
+    .border_bottom("═")
+    .border_left("║")
+    .border_right("║")
+    .corner_top_left("╔")
+    .corner_top_right("╗")
+    .corner_bottom_left("╚")
+    .corner_bottom_right("╝");
+
+  Table lckBalTab;
+  lckBalTab.add_row({"Available Balance: ", m_currency.formatAmount(m_wallet->actualBalance()) + " $LXTH"});
+  lckBalTab.format()
+    .font_align(FontAlign::center)
+    .border_top("═")
+    .border_bottom("═")
+    .border_left("║")
+    .border_right("║")
+    .corner_top_left("╔")
+    .corner_top_right("╗")
+    .corner_bottom_left("╚")
+    .corner_bottom_right("╝");
+
+  Table totBalTab;
+  totBalTab.add_row({"Total Balance: ", m_currency.formatAmount(m_wallet->actualBalance() + m_wallet->pendingBalance()) + " $LXTH"}); 
+  totBalTab.format()
+    .font_align(FontAlign::center)
+    .border_top("═")
+    .border_bottom("═")
+    .border_left("║")
+    .border_right("║")
+    .corner_top_left("╔")
+    .corner_top_right("╗")
+    .corner_bottom_left("╚")
+    .corner_bottom_right("╝");
+
+  std::cout << avaBalTab << std::endl
+            << lckBalTab << std::endl
+            << totBalTab << std::endl;
+
   return true;
 }
 
@@ -1183,7 +1241,7 @@ bool simple_wallet::verify_signature(const std::vector<std::string>& args) {
   }
   
   std::string encodedSig = args[2];
-  const size_t prefix_size = strlen("Sig");
+  const uint64_t prefix_size = strlen("Sig");
   
   if (encodedSig.substr(0, prefix_size) != "Sig") {
     logger(DEBUGGING) << "Invalid signature prefix.";
@@ -1308,8 +1366,8 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::show_incoming_transfers(const std::vector<std::string>& args) {
   bool hasTransfers = false;
-  size_t transactionsCount = m_wallet->getTransactionCount();
-  for (size_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) {
+  uint64_t transactionsCount = m_wallet->getTransactionCount();
+  for (uint64_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) {
     WalletLegacyTransaction txInfo;
     m_wallet->getTransaction(trantransactionNumber, txInfo);
     if (txInfo.totalAmount < 0) continue;
@@ -1326,8 +1384,8 @@ bool simple_wallet::show_incoming_transfers(const std::vector<std::string>& args
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::show_outgoing_transfers(const std::vector<std::string>& args) {
   bool hasTransfers = false;
-  size_t transactionsCount = m_wallet->getTransactionCount();
-  for (size_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) {
+  uint64_t transactionsCount = m_wallet->getTransactionCount();
+  for (uint64_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) {
     WalletLegacyTransaction txInfo;
     m_wallet->getTransaction(trantransactionNumber, txInfo);
     if (txInfo.totalAmount > 0) continue;
@@ -1359,8 +1417,8 @@ bool simple_wallet::listTransfers(const std::vector<std::string>& args) {
     blockHeight = atoi(blockHeightString.c_str());
   }
 
-  size_t transactionsCount = m_wallet->getTransactionCount();
-  for (size_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) 
+  uint64_t transactionsCount = m_wallet->getTransactionCount();
+  for (uint64_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) 
   {
     
     m_wallet->getTransaction(trantransactionNumber, txInfo);
@@ -1747,7 +1805,7 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
     std::vector<TransactionMessage> messages;
     for (auto dst : cmd.dsts) {
       for (auto msg : cmd.messages) {
-        messages.emplace_back(TransactionMessage{ msg, dst.address });
+        messages.push_back(TransactionMessage{ msg, dst.address });
       }
     }
 
@@ -1931,6 +1989,14 @@ int main(int argc, char* argv[]) {
     testnet(command_line::get_arg(vm, arg_testnet)).currency();
 
   if (command_line::has_arg(vm, Tools::wallet_rpc_server::arg_rpc_bind_port)) {
+	  /* If the rpc interface is run, ensure that either legacy mode or an RPC
+	    password is set. */
+	  if (!command_line::has_arg(vm, Tools::wallet_rpc_server::arg_rpc_password) &&
+		  !command_line::has_arg(vm, Tools::wallet_rpc_server::arg_rpc_legacy_security)) {
+	    logger(ERROR, BRIGHT_RED) << "Required RPC password is not set.";
+	    return 1;
+	  }
+
     //runs wallet with rpc interface
     if (!command_line::has_arg(vm, arg_wallet_file)) {
       logger(ERROR, BRIGHT_RED) << "Wallet file not set.";

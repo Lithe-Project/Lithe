@@ -1,11 +1,17 @@
-cmake_minimum_required(VERSION 2.8.6)
+# We need 3.8 for set(CMAKE_CXX_STANDARD 17)
+cmake_minimum_required(VERSION 3.8)
 
-set(VERSION "0.0.3")
+set(VERSION "0.0.4")
 set(BUILD_ID 38)
 set(REFS " (HEAD -> master)")
 
-set(CMAKE_CXX_STANDARD 11)
+# Enable c++17
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+#set(CMAKE_CXX_STANDARD 11)
+#set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_SKIP_INSTALL_RULES OFF)
@@ -74,23 +80,28 @@ else()
   if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND NOT (CMAKE_C_COMPILER_VERSION VERSION_LESS 5.1))
     set(WARNINGS "${WARNINGS} -Wno-error=odr")
   endif()
+
   set(C_WARNINGS "-Waggregate-return -Wnested-externs -Wold-style-definition -Wstrict-prototypes")
   set(CXX_WARNINGS "-Wno-reorder -Wno-missing-field-initializers")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 ${MINGW_FLAG} ${WARNINGS} ${C_WARNINGS} ${ARCH_FLAG} -maes")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MINGW_FLAG} ${WARNINGS} ${C_WARNINGS} ${ARCH_FLAG} -maes")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MINGW_FLAG} ${WARNINGS} ${CXX_WARNINGS} ${ARCH_FLAG} -maes")
+
+  if(APPLE AND CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    # Need to build against libc++ instead of libstc++ on apple
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdinc++ -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1 -nodefaultlibs -lc++ -lc++abi -lm -lc -lgcc -lgcc_eh")
+  endif()
+
   if(NOT APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
   endif()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ${MINGW_FLAG} ${WARNINGS} ${CXX_WARNINGS} ${ARCH_FLAG} -maes")
-  if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_TR1_TUPLE=0")
-  endif()
-  if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND NOT (CMAKE_C_COMPILER_VERSION VERSION_LESS 4.8))
+
+  if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     set(DEBUG_FLAGS "-g3 -Og")
   else()
     set(DEBUG_FLAGS "-g3 -O0")
   endif()
   set(RELEASE_FLAGS "-g3 -O0")
-  
+
 endif()
 
 if(STATIC)

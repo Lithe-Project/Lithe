@@ -155,7 +155,7 @@ namespace CryptoNote
       std::vector<std::string> extra_vec;
       boost::split(extra_vec, buff, boost::is_any_of("\n"), boost::token_compress_on );
       m_extra_messages.resize(extra_vec.size());
-      for(size_t i = 0; i != extra_vec.size(); i++) {
+      for(uint64_t i = 0; i != extra_vec.size(); i++) {
         boost::algorithm::trim(extra_vec[i]);
         if(!extra_vec[i].size())
           continue;
@@ -197,7 +197,7 @@ namespace CryptoNote
     return !m_stop;
   }
   //-----------------------------------------------------------------------------------------------------
-  bool miner::start(const AccountPublicAddress& adr, size_t threads_count)
+  bool miner::start(const AccountPublicAddress& adr, uint64_t threads_count)
   {   
     if (is_mining()) {
       logger(ERROR) << "Starting miner but it's already started";

@@ -23,14 +23,14 @@ namespace {
 }
 
 std::string encode(const std::string& data) {
-  const size_t resultSize = 4 * ((data.size() + 2) / 3);
+  const uint64_t resultSize = 4 * ((data.size() + 2) / 3);
   std::string result;
   result.reserve(resultSize);
 
-  for (size_t i = 0; i < data.size(); i += 3) {
-    size_t a = static_cast<size_t>(data[i]);
-    size_t b = i + 1 < data.size() ? static_cast<size_t>(data[i + 1]) : 0;
-    size_t c = i + 2 < data.size() ? static_cast<size_t>(data[i + 2]) : 0;
+  for (uint64_t i = 0; i < data.size(); i += 3) {
+    uint64_t a = static_cast<uint64_t>(data[i]);
+    uint64_t b = i + 1 < data.size() ? static_cast<uint64_t>(data[i + 1]) : 0;
+    uint64_t c = i + 2 < data.size() ? static_cast<uint64_t>(data[i + 2]) : 0;
 
     result.push_back(base64chars[a >> 2]);
     result.push_back(base64chars[((a & 0x3) << 4) | (b >> 4)]);
@@ -50,10 +50,10 @@ std::string encode(const std::string& data) {
 }
   
 std::string decode(std::string const& encoded_string) {
-  size_t in_len = encoded_string.size();
-  size_t i = 0;
-  size_t j = 0;
-  size_t in_ = 0;
+  uint64_t in_len = encoded_string.size();
+  uint64_t i = 0;
+  uint64_t j = 0;
+  uint64_t in_ = 0;
   unsigned char char_array_4[4], char_array_3[3];
   std::string ret;
 

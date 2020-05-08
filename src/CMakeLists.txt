@@ -1,5 +1,8 @@
 add_definitions(-DSTATICLIB)
 
+# make sure cmake can find tabulate
+include_directories(../external/tabulate)
+
 file(GLOB_RECURSE BlockchainExplorer BlockchainExplorer/*)
 file(GLOB_RECURSE Common Common/*)
 file(GLOB_RECURSE Crypto crypto/*)

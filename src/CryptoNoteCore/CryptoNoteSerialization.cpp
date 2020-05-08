@@ -36,11 +36,11 @@ namespace {
 using namespace CryptoNote;
 using namespace Common;
 
-size_t getSignaturesCount(const TransactionInput& input) {
-  struct txin_signature_size_visitor : public boost::static_visitor < size_t > {
-    size_t operator()(const BaseInput& txin) const { return 0; }
-    size_t operator()(const KeyInput& txin) const { return txin.outputIndexes.size(); }
-    size_t operator()(const MultisignatureInput& txin) const { return txin.signatureCount; }
+uint64_t getSignaturesCount(const TransactionInput& input) {
+  struct txin_signature_size_visitor : public boost::static_visitor < uint64_t > {
+    uint64_t operator()(const BaseInput& txin) const { return 0; }
+    uint64_t operator()(const KeyInput& txin) const { return txin.outputIndexes.size(); }
+    uint64_t operator()(const MultisignatureInput& txin) const { return txin.signatureCount; }
   };
 
   return boost::apply_visitor(txin_signature_size_visitor(), input);
@@ -116,7 +116,7 @@ bool serializePod(T& v, Common::StringView name, CryptoNote::ISerializer& serial
 }
 
 bool serializeVarintVector(std::vector<uint32_t>& vector, CryptoNote::ISerializer& serializer, Common::StringView name) {
-  size_t size = vector.size();
+  uint64_t size = vector.size();
   
   if (!serializer.beginArray(size, name)) {
     vector.clear();
@@ -125,7 +125,7 @@ bool serializeVarintVector(std::vector<uint32_t>& vector, CryptoNote::ISerialize
 
   vector.resize(size);
 
-  for (size_t i = 0; i < size; ++i) {
+  for (uint64_t i = 0; i < size; ++i) {
     serializer(vector[i], "");
   }
 
@@ -189,7 +189,7 @@ void serialize(TransactionPrefix& txP, ISerializer& serializer) {
 void serialize(Transaction& tx, ISerializer& serializer) {
   serialize(static_cast<TransactionPrefix&>(tx), serializer);
 
-  size_t sigSize = tx.inputs.size();
+  uint64_t sigSize = tx.inputs.size();
   //TODO: make arrays without sizes
 //  serializer.beginArray(sigSize, "signatures");
   
@@ -202,8 +202,8 @@ void serialize(Transaction& tx, ISerializer& serializer) {
     throw std::runtime_error("Serialization error: unexpected signatures size");
   }
 
-  for (size_t i = 0; i < tx.inputs.size(); ++i) {
-    size_t signatureSize = getSignaturesCount(tx.inputs[i]);
+  for (uint64_t i = 0; i < tx.inputs.size(); ++i) {
+    uint64_t signatureSize = getSignaturesCount(tx.inputs[i]);
     if (signaturesNotExpected) {
       if (signatureSize == 0) {
         continue;
@@ -334,7 +334,7 @@ void serialize(AccountKeys& keys, ISerializer& s) {
 void doSerialize(TransactionExtraMergeMiningTag& tag, ISerializer& serializer) {
   uint64_t depth = static_cast<uint64_t>(tag.depth);
   serializer(depth, "depth");
-  tag.depth = static_cast<size_t>(depth);
+  tag.depth = static_cast<uint64_t>(depth);
   serializer(tag.merkleRoot, "merkle_root");
 }
 
