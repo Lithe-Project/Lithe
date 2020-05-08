@@ -12,6 +12,7 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#include <sys/select.h>
 #else
 #include <unistd.h>
 #include <stdio.h>

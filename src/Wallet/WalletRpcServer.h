@@ -43,7 +43,8 @@ namespace Tools
     static const command_line::arg_descriptor<uint16_t> arg_rpc_bind_port;
     static const command_line::arg_descriptor<std::string> arg_rpc_bind_ip;
     static const command_line::arg_descriptor<std::string> arg_rpc_user;
-    static const command_line::arg_descriptor<std::string> arg_rpc_password;
+	  static const command_line::arg_descriptor<std::string> arg_rpc_password;
+	  static const command_line::arg_descriptor<bool> arg_rpc_legacy_security;
 
   private:
 
@@ -70,10 +71,13 @@ namespace Tools
     Logging::LoggerRef logger;
     CryptoNote::IWalletLegacy& m_wallet;
     CryptoNote::INode& m_node;
+
     uint16_t m_port;
     std::string m_bind_ip;
     std::string m_rpcUser;
-    std::string m_rpcPassword;
+    std::string m_password;
+  	bool m_legacy;
+
     CryptoNote::Currency& m_currency;
     const std::string m_walletFilename;
 
