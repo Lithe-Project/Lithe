@@ -1,7 +1,7 @@
 # We need 3.8 for set(CMAKE_CXX_STANDARD 17)
 cmake_minimum_required(VERSION 3.8)
 
-set(VERSION "0.0.3")
+set(VERSION "0.0.4")
 set(BUILD_ID 30)
 set(REFS " (HEAD -> master)")
 
