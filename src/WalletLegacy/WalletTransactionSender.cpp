@@ -797,6 +797,7 @@ uint64_t WalletTransactionSender::selectDepositTransfers(const std::vector<Depos
 
     Deposit deposit;
     bool r = m_transactionsCache.getDeposit(id, deposit);
+    if (r) {}
     assert(r);
 
     foundMoney += deposit.amount + deposit.interest;
