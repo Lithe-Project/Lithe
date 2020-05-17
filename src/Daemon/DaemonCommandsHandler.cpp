@@ -55,8 +55,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core& core, CryptoNote:
 }
 
 //--------------------------------------------------------------------------------
-std::string DaemonCommandsHandler::get_commands_str()
-{
+std::string DaemonCommandsHandler::get_commands_str() {
   std::stringstream ss;
   ss << CryptoNote::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG << ENDL;
   ss << "Commands: " << ENDL;
@@ -67,8 +66,7 @@ std::string DaemonCommandsHandler::get_commands_str()
   return ss.str();
 }
 //--------------------------------------------------------------------------------
-bool DaemonCommandsHandler::status(const std::vector<std::string>& args)
-{
+bool DaemonCommandsHandler::status(const std::vector<std::string>& args) {
   CryptoNote::COMMAND_RPC_GET_INFO::request req;
   CryptoNote::COMMAND_RPC_GET_INFO::response resp;
   Table statusTable;
@@ -105,11 +103,10 @@ bool DaemonCommandsHandler::status(const std::vector<std::string>& args)
   return true;
 }
 //--------------------------------------------------------------------------------
-std::string DaemonCommandsHandler::get_mining_speed(uint32_t hr)
-{
+std::string DaemonCommandsHandler::get_mining_speed(uint32_t hr) {
   if (hr>1e9) return (boost::format("%.2f GH/s") % (hr/1e9)).str();
   if (hr>1e6) return (boost::format("%.2f MH/s") % (hr/1e6)).str();
-  if (hr>1e3) return (boost::format("%.2f kH/s") % (hr/1e3)).str();
+  if (hr>1e3) return (boost::format("%.2f KH/s") % (hr/1e3)).str();
   return (boost::format("%.0f H/s") % hr).str();
 }
 //--------------------------------------------------------------------------------
@@ -142,7 +139,6 @@ bool DaemonCommandsHandler::exit(const std::vector<std::string>& args) {
   m_srv.sendStopSignal();
   return true;
 }
-
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::help(const std::vector<std::string>& args) {
   Common::Console::setTextColor(Common::Console::Color::BrightMagenta);
@@ -155,8 +151,7 @@ bool DaemonCommandsHandler::print_pl(const std::vector<std::string>& args) {
   return true;
 }
 //--------------------------------------------------------------------------------
-bool DaemonCommandsHandler::show_hr(const std::vector<std::string>& args)
-{
+bool DaemonCommandsHandler::show_hr(const std::vector<std::string>& args) {
   if (!m_core.get_miner().is_mining())
   {
     std::cout << "Mining is not started. You need to start mining before you can see hash rate." << ENDL;
@@ -167,14 +162,12 @@ bool DaemonCommandsHandler::show_hr(const std::vector<std::string>& args)
   return true;
 }
 //--------------------------------------------------------------------------------
-bool DaemonCommandsHandler::hide_hr(const std::vector<std::string>& args)
-{
+bool DaemonCommandsHandler::hide_hr(const std::vector<std::string>& args) {
   m_core.get_miner().do_print_hashrate(false);
   return true;
 }
 //--------------------------------------------------------------------------------
-bool DaemonCommandsHandler::print_bc_outs(const std::vector<std::string>& args)
-{
+bool DaemonCommandsHandler::print_bc_outs(const std::vector<std::string>& args) {
   if (args.size() != 1)
   {
     std::cout << "need file path as parameter" << ENDL;
@@ -184,8 +177,7 @@ bool DaemonCommandsHandler::print_bc_outs(const std::vector<std::string>& args)
   return true;
 }
 //--------------------------------------------------------------------------------
-bool DaemonCommandsHandler::print_cn(const std::vector<std::string>& args)
-{
+bool DaemonCommandsHandler::print_cn(const std::vector<std::string>& args) {
   m_srv.get_payload_object().log_connections();
   return true;
 }

@@ -449,7 +449,7 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("incoming_transfers", boost::bind(&simple_wallet::show_incoming_transfers, this, _1), "Show incoming transfers");
   m_consoleHandler.setHandler("outgoing_transfers", boost::bind(&simple_wallet::show_outgoing_transfers, this, _1), "Show outgoing transfers");
   m_consoleHandler.setHandler("list_transfers", boost::bind(&simple_wallet::listTransfers, this, _1), "list_transfers <height> - Show all known transfers from a certain (optional) block height");
-  m_consoleHandler.setHandler("bc_height", boost::bind(&simple_wallet::show_blockchain_height, this, _1), "Show blockchain height");
+  m_consoleHandler.setHandler("wallet_info", boost::bind(&simple_wallet::show_wallet_info, this, _1), "Show blockchain height");
   m_consoleHandler.setHandler("transfer", boost::bind(&simple_wallet::transfer, this, _1),
     "transfer <addr_1> <amount_1> [<addr_2> <amount_2> ... <addr_N> <amount_N>] [-p payment_id]"
     " - Transfer <amount_1>,... <amount_N> to <address_1>,... <address_N>, respectively. ");
@@ -1168,9 +1168,12 @@ void simple_wallet::synchronizationProgressUpdated(uint32_t current, uint32_t to
 }
 
 bool simple_wallet::show_balance(const std::vector<std::string>& args) {
-  Table avaBalTab;
-  avaBalTab.add_row({"Available Balance: ", m_currency.formatAmount(m_wallet->actualBalance()) + " $LXTH"});
-  avaBalTab.format()
+  Table balTab;
+  balTab.add_row({"Available Balance", m_currency.formatAmount(m_wallet->actualBalance()) + " $LXTH"});
+  balTab.add_row({"Pending Balance", m_currency.formatAmount(m_wallet->pendingBalance()) + " $LXTH"});
+  balTab.add_row({"Total Balance", m_currency.formatAmount(m_wallet->actualBalance() + m_wallet->pendingBalance()) + " $LXTH"}); 
+
+  balTab.format()
     .font_align(FontAlign::center)
     .border_top("═")
     .border_bottom("═")
@@ -1181,35 +1184,18 @@ bool simple_wallet::show_balance(const std::vector<std::string>& args) {
     .corner_bottom_left("╚")
     .corner_bottom_right("╝");
 
-  Table lckBalTab;
-  lckBalTab.add_row({"Available Balance: ", m_currency.formatAmount(m_wallet->actualBalance()) + " $LXTH"});
-  lckBalTab.format()
-    .font_align(FontAlign::center)
-    .border_top("═")
-    .border_bottom("═")
-    .border_left("║")
-    .border_right("║")
-    .corner_top_left("╔")
-    .corner_top_right("╗")
-    .corner_bottom_left("╚")
-    .corner_bottom_right("╝");
+  balTab.row(1).format()
+    .corner_top_left("╠")
+    .corner_top_right("╣");
 
-  Table totBalTab;
-  totBalTab.add_row({"Total Balance: ", m_currency.formatAmount(m_wallet->actualBalance() + m_wallet->pendingBalance()) + " $LXTH"}); 
-  totBalTab.format()
-    .font_align(FontAlign::center)
-    .border_top("═")
-    .border_bottom("═")
-    .border_left("║")
-    .border_right("║")
-    .corner_top_left("╔")
-    .corner_top_right("╗")
-    .corner_bottom_left("╚")
-    .corner_bottom_right("╝");
+  balTab.row(2).format()
+    .corner_top_left("╠")
+    .corner_top_right("╣");
 
-  std::cout << avaBalTab << std::endl
-            << lckBalTab << std::endl
-            << totBalTab << std::endl;
+  balTab.column(0).format().font_align(FontAlign::center).font_color(Color::green);
+  balTab.column(1).format().font_align(FontAlign::center).font_color(Color::magenta);
+
+  std::cout << balTab << std::endl;
 
   return true;
 }
@@ -1497,13 +1483,16 @@ bool simple_wallet::show_payments(const std::vector<std::string> &args) {
   return true;
 }
 //----------------------------------------------------------------------------------------------------
-bool simple_wallet::show_blockchain_height(const std::vector<std::string>& args) {
+bool simple_wallet::show_wallet_info(const std::vector<std::string>& args) {
   try {
-    uint64_t bc_height = m_node->getLastLocalBlockHeight();
-    std::cout << BrightMagentaMsg(std::to_string(bc_height)) << std::endl;
+    uint64_t wal_height = m_node->getLastLocalBlockHeight();
+
+    std::cout << "Wallet Height: " << wal_height << std::endl
+              << "Wallet Type: " << (m_currency.isTestnet() ? "Testnet" : "Mainnet") << std::endl;
+    //@TODO work in bc_height and make sync bool
   } catch (std::exception &e) {
-    logger(DEBUGGING) << "Failed to get Blockchain Height: " << e.what();
-    std::cout << RedMsg("Failed to get Blockchain Height: ") << RedMsg(e.what());
+    logger(DEBUGGING) << "Failed to get Wallet Information: " << e.what();
+    std::cout << RedMsg("Failed to get Wallet Information: ") << RedMsg(e.what());
   }
 
   return true;

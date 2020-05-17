@@ -177,9 +177,7 @@ int main(int argc, char* argv[]) {
     // configure logging
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
 
-    /* write to the log what version this is */
     logger(DEBUGGING) << "Lithe v" << PROJECT_VERSION_LONG;
-    /* now display it to the user. Displays "Lithe v0.0.2 - Pre-Alpha-Stage2" */
     std::cout << std::endl << MagentaMsg("Lithe") << BrightMagentaMsg("v" PROJECT_VERSION " - " PROJECT_VERSION_BUILD_NO);
 
     if (command_line_preprocessor(vm, logger)) {
@@ -191,10 +189,7 @@ int main(int argc, char* argv[]) {
 
     bool testnet_mode = command_line::get_arg(vm, arg_testnet_on);
     if (testnet_mode) {
-      /* tell the log testnet is active */
       logger(DEBUGGING) << "Started the Daemon in testnet mode.";
-      
-      /* now tell the user */
       std::cout << std::endl << BrightYellowMsg("Activating Testnet") << std::endl
               << YellowMsg("You have started your daemon in Testnet mode")
               << std::endl 
@@ -248,41 +243,30 @@ int main(int argc, char* argv[]) {
     ccore.set_cryptonote_protocol(&cprotocol);
 
     // initialize objects
-    /* tell the log */
     logger(DEBUGGING) << "Initializing p2p server...";
-    /* now the user */
     std::cout << GreenMsg("Starting P2P Server...") << std::endl;
 
     if (!p2psrv.init(netNodeConfig)) {
       logger(ERROR, BRIGHT_RED) << "Failed to initialize p2p server.";
       return 1;
     }
-    
-    /* tell the log */
+
     logger(DEBUGGING) << "P2p server initialized OK";
-    /* now the user */
     std::cout << BrightGreenMsg("P2P Server is active.") << std::endl;
 
     // initialize core here
-    /* tell the log */
     logger(DEBUGGING) << "Initializing core...";
-    /* now the user */
     std::cout << GreenMsg("Starting Core...") << std::endl;
 
     if (!ccore.init(coreConfig, minerConfig, true)) {
-      /* tell the user and the log */
       logger(ERROR, BRIGHT_RED) << "- Daemon.cpp - Failed to initialize core";
       return 1;
     }
 
-    /* tell the log */
     logger(DEBUGGING) << "Core initialized OK";
-    /* now the user */
     std::cout << BrightGreenMsg("Core is active.") << std::endl;
 
-    /* tell the log */
     logger(DEBUGGING) << "Starting core rpc server on address " << rpcConfig.getBindAddress();
-    /* now the user */
     std::cout << YellowMsg("Starting Core RPC Server...") << std::endl;
 
     /* Set address for remote node fee */
@@ -291,14 +275,12 @@ int main(int argc, char* argv[]) {
 	  if (!addr_str.empty()) {
         AccountPublicAddress acc = boost::value_initialized<AccountPublicAddress>();
         if (!currency.parseAccountAddressString(addr_str, acc)) {
-          /* tell the user and log file */
           logger(ERROR, BRIGHT_RED) << "Bad fee address: " << addr_str;
           return 1;
         }
         rpcServer.setFeeAddress(addr_str, acc);
-        /* tell the log */
+
         logger(DEBUGGING) << "Remote node fee address set: " << addr_str;
-        /* now the user */
         std::cout << BrightGreenMsg("Remote node address set to: ") << BrightMagentaMsg(addr_str) << std::endl;
       }
 	  }
@@ -309,18 +291,16 @@ int main(int argc, char* argv[]) {
       std::string vk_str = command_line::get_arg(vm, arg_set_view_key);
 	    if (!vk_str.empty()) {
         rpcServer.setViewKey(vk_str);
-        /* tell the log */
+
         logger(DEBUGGING) << "Secret view key set: " << vk_str;
-        /* now the user */
         std::cout << BrightGreenMsg("Secret View Key set: ") << BrightMagentaMsg(vk_str) << std::endl;
       }
     }
  
     rpcServer.start(rpcConfig.bindIp, rpcConfig.bindPort);
 	  rpcServer.enableCors(command_line::get_arg(vm, arg_enable_cors));
-    /* tell the log */
+
     logger(DEBUGGING) << "Core rpc server started ok";
-    /* now the user */
     std::cout << BrightGreenMsg("Core RPC Server started on: ") << BrightMagentaMsg(rpcConfig.getBindAddress()) << std::endl;
 
     DaemonCommandsHandler dch(ccore, p2psrv, logManager, &rpcServer);
@@ -335,34 +315,25 @@ int main(int argc, char* argv[]) {
       p2psrv.sendStopSignal();
     });
 
-    /* tell the log */
     logger(DEBUGGING) << "Starting p2p net loop...";
-    /* now the user */
     std::cout << BrightGreenMsg("Starting P2P Net Loop.") << std::endl;
     p2psrv.run();
-    /* tell the log */
-    logger(DEBUGGING) << "p2p net loop stopped";
-    /* now the user */
-    std::cout << GreenMsg("P2P Net Loop is now stopping.") << std::endl;
-
-    dch.stop_handling();
 
     //stop components
-    /* tell the log */
+    logger(DEBUGGING) << "p2p net loop stopped";
+    std::cout << GreenMsg("P2P Net Loop is now stopping.") << std::endl;
+    dch.stop_handling();
+
     logger(DEBUGGING) << "Stopping core rpc server...";
-    /* now the user */
     std::cout << GreenMsg("Core RPC Server has now stopped.") << std::endl;
     rpcServer.stop();
 
     //deinitialize components
-    /* tell the log */
     logger(DEBUGGING) << "Deinitializing core...";
-    /* now the user */
     std::cout << GreenMsg("Core has now stopped.") << std::endl;
     ccore.deinit();
-    /* tell the log */
+
     logger(DEBUGGING) << "Deinitializing p2p...";
-    /* now the user */
     std::cout << GreenMsg("P2P Net Loop has now stopped.") << std::endl;
     p2psrv.deinit();
 
@@ -370,14 +341,11 @@ int main(int argc, char* argv[]) {
     cprotocol.set_p2p_endpoint(NULL);
 
   } catch (const std::exception& e) {
-    /* tell the user and log file */
     logger(ERROR, BRIGHT_RED) << "Exception: " << e.what();
     return 1;
   }
 
-  /* tell the log */
   logger(DEBUGGING) << "Node stopped.";
-  /* now the user */
   std::cout << GreenMsg("The Daemon has now stopped.") << std::endl;
 
   return 0;
