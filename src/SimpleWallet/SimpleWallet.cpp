@@ -542,15 +542,12 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
 
   if (m_generate_new.empty() && m_wallet_file_arg.empty()) {
 
-    std::cout << std::endl << "Welcome, please choose an option below:"
-              << std::endl 
+    std::cout << std::endl << "Welcome, please choose an option below:"<< std::endl 
               << std::endl << BrightMagentaMsg("\t[G]") << " - Generate a new wallet address"
               << std::endl << BrightMagentaMsg("\t[O]") << " - Open a wallet already on your system"
               << std::endl << BrightMagentaMsg("\t[S]") << " - Regenerate your wallet using a seed phrase of words"
-              << std::endl << BrightMagentaMsg("\t[I]") << " - Import your wallet using a View Key and Spend Key"
-              << std::endl 
-              << std::endl << YellowMsg("or, press CTRL_C to exit: ")
-              << std::flush;
+              << std::endl << BrightMagentaMsg("\t[I]") << " - Import your wallet using a View Key and Spend Key"<< std::endl 
+              << std::endl << YellowMsg("or, press CTRL_C to exit: ") << std::flush;
 
     char c;
     do {
@@ -593,8 +590,6 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
       m_wallet_file_arg = userInput;
     }
   }
-
-
 
   if (!m_generate_new.empty() && !m_wallet_file_arg.empty() && !m_import_new.empty()) {
     logger(DEBUGGING) << "User tried to use generate-new-wallet and wallet-file together.";
@@ -677,48 +672,44 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
 
     std::string private_spend_key_string;
     std::string private_view_key_string;
-
-Crypto::SecretKey private_spend_key;
-Crypto::SecretKey private_view_key;
-
-if (key_import) {
-    do {
-      std::cout << "Private Spend Key: ";
-      std::getline(std::cin, private_spend_key_string);
-      boost::algorithm::trim(private_spend_key_string);
-    } while (private_spend_key_string.empty());
-    do {
-      std::cout << "Private View Key: ";
-      std::getline(std::cin, private_view_key_string);
-      boost::algorithm::trim(private_view_key_string);
-    } while (private_view_key_string.empty());
-} else {
-  std::string mnemonic_phrase;
-
-  do {
-    std::cout << "Mnemonics Phrase (25 words): ";
-    std::getline(std::cin, mnemonic_phrase);
-    boost::algorithm::trim(mnemonic_phrase);
-    boost::algorithm::to_lower(mnemonic_phrase);
-  } while (!is_valid_mnemonic(mnemonic_phrase, private_spend_key));
-
-  /* This is not used, but is needed to be passed to the function, not sure how we can avoid this */
-  Crypto::PublicKey unused_dummy_variable;
-
-  AccountBase::generateViewFromSpend(private_spend_key, private_view_key, unused_dummy_variable);
-}
-
-/* We already have our keys if we import via mnemonic seed */
-if (key_import) {
-    Crypto::Hash private_spend_key_hash;
-    Crypto::Hash private_view_key_hash;
-    uint64_t size;
-    if (!Common::fromHex(private_spend_key_string, &private_spend_key_hash, sizeof(private_spend_key_hash), size) || size != sizeof(private_spend_key_hash)) {
-      return false;
+    Crypto::SecretKey private_spend_key;
+    Crypto::SecretKey private_view_key;
+    
+    if (key_import) {
+      do {
+        std::cout << "Private Spend Key: ";
+        std::getline(std::cin, private_spend_key_string);
+        boost::algorithm::trim(private_spend_key_string);
+      } while (private_spend_key_string.empty());
+      do {
+        std::cout << "Private View Key: ";
+        std::getline(std::cin, private_view_key_string);
+        boost::algorithm::trim(private_view_key_string);
+      } while (private_view_key_string.empty());
+    } else {
+      std::string mnemonic_phrase;
+      do {
+        std::cout << "Mnemonics Phrase (25 words): ";
+        std::getline(std::cin, mnemonic_phrase);
+        boost::algorithm::trim(mnemonic_phrase);
+        boost::algorithm::to_lower(mnemonic_phrase);
+      } while (!is_valid_mnemonic(mnemonic_phrase, private_spend_key));
+      /* This is not used, but is needed to be passed to the function, not sure how we can avoid this */
+      Crypto::PublicKey unused_dummy_variable;
+      AccountBase::generateViewFromSpend(private_spend_key, private_view_key, unused_dummy_variable);
     }
-    if (!Common::fromHex(private_view_key_string, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_spend_key_hash)) {
-      return false;
-    }
+    
+    /* We already have our keys if we import via mnemonic seed */
+    if (key_import) {
+      Crypto::Hash private_spend_key_hash;
+      Crypto::Hash private_view_key_hash;
+      uint64_t size;
+      if (!Common::fromHex(private_spend_key_string, &private_spend_key_hash, sizeof(private_spend_key_hash), size) || size != sizeof(private_spend_key_hash)) {
+        return false;
+      }
+      if (!Common::fromHex(private_view_key_string, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_spend_key_hash)) {
+        return false;
+      }
       private_spend_key = *(struct Crypto::SecretKey *) &private_spend_key_hash;
       private_view_key = *(struct Crypto::SecretKey *) &private_view_key_hash;
     }
@@ -888,13 +879,11 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
               << BrightYellowMsg("funds due to nonexistent/missing/lost private keys.") << std::endl
               << "" << std::endl;
 
-
     std::cout << "Wallet Address: " << BrightMagentaMsg(m_wallet->getAddress()) << std::endl;
     std::cout << "Private spend key: " << BrightMagentaMsg(Common::podToHex(keys.spendSecretKey)) << std::endl;
     std::cout << "Private view key: " << BrightMagentaMsg(Common::podToHex(keys.viewSecretKey)) << std::endl;
     std::cout << "Mnemonic Seed: " << BrightMagentaMsg(generate_mnemonic(keys.spendSecretKey)) << std::endl;
-  }
-  catch (const std::exception& e) {
+  } catch (const std::exception& e) {
     logger(DEBUGGING) << "Failed to generate a new wallet: " << e.what();
     std::cout << RedMsg("Failed to generate a new wallet: ") << YellowMsg(e.what()) << std::endl;
     return false;
@@ -961,9 +950,7 @@ bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey 
   }
   
   std::cout << BrightGreenMsg("Your Wallet has successfully been imported.") << std::endl << std::endl
-
             << BrightGreenMsg("Use \"help\" command to see the list of available commands.") << std::endl << std::endl
-
             << BrightYellowMsg("Always use \"exit\" command when closing simplewallet to save") << std::endl
             << BrightYellowMsg("current session's state. Otherwise, you will possibly need to synchronize") << std::endl
             << BrightYellowMsg("your wallet again. Your wallet key is NOT under risk anyway.") << std::endl << std::endl;
@@ -981,6 +968,7 @@ bool simple_wallet::close_wallet()
 {
   try {
     CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
+    std::cout << BrightGreenMsg("Wallet Data saved successfully.") << std::endl;
   } catch (const std::exception& e) {
       logger(DEBUGGING) << e.what();
       std::cout << RedMsg(e.what()) << std::endl;
@@ -1169,34 +1157,23 @@ void simple_wallet::synchronizationProgressUpdated(uint32_t current, uint32_t to
 
 bool simple_wallet::show_balance(const std::vector<std::string>& args) {
   Table balTab;
-  balTab.add_row({"Available Balance", m_currency.formatAmount(m_wallet->actualBalance()) + " $LXTH"});
-  balTab.add_row({"Pending Balance", m_currency.formatAmount(m_wallet->pendingBalance()) + " $LXTH"});
-  balTab.add_row({"Total Balance", m_currency.formatAmount(m_wallet->actualBalance() + m_wallet->pendingBalance()) + " $LXTH"}); 
+  balTab.add_row({"Available Balance: " + m_currency.formatAmount(m_wallet->actualBalance()) + " $LXTH"});
+  balTab.add_row({"Pending Balance: " + m_currency.formatAmount(m_wallet->pendingBalance()) + " $LXTH"});
+  balTab.add_row({"Total Balance: " + m_currency.formatAmount(m_wallet->actualBalance() + m_wallet->pendingBalance()) + " $LXTH"}); 
 
   balTab.format()
     .font_align(FontAlign::center)
-    .border_top("═")
-    .border_bottom("═")
-    .border_left("║")
-    .border_right("║")
-    .corner_top_left("╔")
-    .corner_top_right("╗")
-    .corner_bottom_left("╚")
-    .corner_bottom_right("╝");
+    .border_top("═").border_bottom("═").border_left("║").border_right("║")
+    .corner_top_left("╔").corner_top_right("╗").corner_bottom_left("╚").corner_bottom_right("╝");
 
-  balTab.row(1).format()
-    .corner_top_left("╠")
-    .corner_top_right("╣");
+  balTab.row(1).format().corner_top_left("╠").corner_top_right("╣");
+  balTab.row(2).format().corner_top_left("╠").corner_top_right("╣");
 
-  balTab.row(2).format()
-    .corner_top_left("╠")
-    .corner_top_right("╣");
-
-  balTab.column(0).format().font_align(FontAlign::center).font_color(Color::green);
-  balTab.column(1).format().font_align(FontAlign::center).font_color(Color::magenta);
+  balTab.row(0).format().font_align(FontAlign::center).font_color(Color::green);
+  balTab.row(1).format().font_align(FontAlign::center).font_color(Color::yellow);
+  balTab.row(2).format().font_align(FontAlign::center).font_color(Color::green);
 
   std::cout << balTab << std::endl;
-
   return true;
 }
 

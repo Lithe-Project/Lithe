@@ -16,23 +16,6 @@ and assisting new means of use for digital economics in real-world situations, t
 |----------|--------|--------|
 | **Windows (x64)** | [![Build status](https://ci.appveyor.com/api/projects/status/nh544hdqrd8f2fba/branch/master?svg=true)](https://ci.appveyor.com/project/LithyRiolu93389/lithe/branch/master) | `master` |
 
-#### Net State
-> This section will be replaced once we launch a mainnet but as for now, we are tracking everything in the versions leading up to one.
-
-If you're intrested in taking part with **Lithe** before mainnet, then it is suggested that you read, and look for updates, here.
-
-| Version | Description |
-|---------|-------------|
-| 0.0.1 | General development |
-| 0.0.2 | Allow public use |
-| 0.0.3 | Major CLI UI & Logging updates  |
-
-#### Documents
-
-- [Wikithe]() <- finish lithe wiki "wikithe"
-- [Changelog](https://github.com/Lithe-Project/Lithe/blob/master/docs/changelog.md)
-- [Build]() <- create a how to build document
-
 #### Applications
 
 - [Block explorer](https://github.com/Lithe-Project/Lithe-Explorer)

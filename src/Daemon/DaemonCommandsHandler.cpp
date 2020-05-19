@@ -35,31 +35,46 @@ namespace {
 
 DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core& core, CryptoNote::NodeServer& srv, Logging::LoggerManager& log, CryptoNote::RpcServer* prpc_server) :
   m_core(core), m_srv(srv), logger(log, "daemon"), m_logManager(log), m_prpc_server(prpc_server) {
+  m_consoleHandler.setHandler("help", boost::bind(&DaemonCommandsHandler::help, this, _1), "Show Basic Commands");
+  m_consoleHandler.setHandler("advanced", boost::bind(&DaemonCommandsHandler::advanced, this, _1), "Show Advanced Commands");
+  m_consoleHandler.setHandler("help-usage", boost::bind(&DaemonCommandsHandler::helpUsage, this, _1), "Show Basic Commands");
+  m_consoleHandler.setHandler("advanced-usage", boost::bind(&DaemonCommandsHandler::advancedUsage, this, _1), "Show Advanced Commands");
+  
   m_consoleHandler.setHandler("exit", boost::bind(&DaemonCommandsHandler::exit, this, _1), "Shutdown the daemon");
-  m_consoleHandler.setHandler("help", boost::bind(&DaemonCommandsHandler::help, this, _1), "Show this help");
-  m_consoleHandler.setHandler("print_pl", boost::bind(&DaemonCommandsHandler::print_pl, this, _1), "Print peer list");
-  m_consoleHandler.setHandler("rollback_chain", boost::bind(&DaemonCommandsHandler::rollback_chain, this, _1), "Rollback chain to specific height, rollback_chain <height>");
-  m_consoleHandler.setHandler("print_cn", boost::bind(&DaemonCommandsHandler::print_cn, this, _1), "Print connections");
-  m_consoleHandler.setHandler("print_bc", boost::bind(&DaemonCommandsHandler::print_bc, this, _1), "Print blockchain info in a given blocks range, print_bc <begin_height> [<end_height>]");
-  m_consoleHandler.setHandler("print_block", boost::bind(&DaemonCommandsHandler::print_block, this, _1), "Print block, print_block <block_hash> | <block_height>");
-  m_consoleHandler.setHandler("print_stat", boost::bind(&DaemonCommandsHandler::print_stat, this, _1), "Print statistics, print_stat <nothing=last> | <block_hash> | <block_height>");
-  m_consoleHandler.setHandler("print_tx", boost::bind(&DaemonCommandsHandler::print_tx, this, _1), "Print transaction, print_tx <transaction_hash>");
   m_consoleHandler.setHandler("start_mining", boost::bind(&DaemonCommandsHandler::start_mining, this, _1), "Start mining for specified address, start_mining <addr> [threads=1]");
   m_consoleHandler.setHandler("stop_mining", boost::bind(&DaemonCommandsHandler::stop_mining, this, _1), "Stop mining");
-  m_consoleHandler.setHandler("print_pool", boost::bind(&DaemonCommandsHandler::print_pool, this, _1), "Print transaction pool (long format)");
-  m_consoleHandler.setHandler("print_pool_sh", boost::bind(&DaemonCommandsHandler::print_pool_sh, this, _1), "Print transaction pool (short format)");
   m_consoleHandler.setHandler("show_hr", boost::bind(&DaemonCommandsHandler::show_hr, this, _1), "Start showing hash rate");
   m_consoleHandler.setHandler("hide_hr", boost::bind(&DaemonCommandsHandler::hide_hr, this, _1), "Stop showing hash rate");
   m_consoleHandler.setHandler("set_log", boost::bind(&DaemonCommandsHandler::set_log, this, _1), "set_log <level> - Change current log level, <level> is a number 0-4");
   m_consoleHandler.setHandler("status", boost::bind(&DaemonCommandsHandler::status, this, _1), "Show daemon status");
+
+  m_consoleHandler.setHandlerAdv("print_pl", boost::bind(&DaemonCommandsHandler::print_pl, this, _1), "Print peer list");
+  m_consoleHandler.setHandlerAdv("rollback_chain", boost::bind(&DaemonCommandsHandler::rollback_chain, this, _1), "Rollback chain to specific height, rollback_chain <height>");
+  m_consoleHandler.setHandlerAdv("print_cn", boost::bind(&DaemonCommandsHandler::print_cn, this, _1), "Print connections");
+  m_consoleHandler.setHandlerAdv("print_bc", boost::bind(&DaemonCommandsHandler::print_bc, this, _1), "Print blockchain info in a given blocks range, print_bc <begin_height> [<end_height>]");
+  m_consoleHandler.setHandlerAdv("print_block", boost::bind(&DaemonCommandsHandler::print_block, this, _1), "Print block, print_block <block_hash> | <block_height>");
+  m_consoleHandler.setHandlerAdv("print_stat", boost::bind(&DaemonCommandsHandler::print_stat, this, _1), "Print statistics, print_stat <nothing=last> | <block_hash> | <block_height>");
+  m_consoleHandler.setHandlerAdv("print_tx", boost::bind(&DaemonCommandsHandler::print_tx, this, _1), "Print transaction, print_tx <transaction_hash>");
+  m_consoleHandler.setHandlerAdv("print_pool", boost::bind(&DaemonCommandsHandler::print_pool, this, _1), "Print transaction pool (long format)");
+  m_consoleHandler.setHandlerAdv("print_pool_sh", boost::bind(&DaemonCommandsHandler::print_pool_sh, this, _1), "Print transaction pool (short format)");
 }
 
 //--------------------------------------------------------------------------------
 std::string DaemonCommandsHandler::get_commands_str() {
   std::stringstream ss;
   ss << CryptoNote::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG << ENDL;
-  ss << "Commands: " << ENDL;
+  ss << "Basic Commands: " << ENDL;
   std::string usage = m_consoleHandler.getUsage();
+  boost::replace_all(usage, "\n", "\n  ");
+  usage.insert(0, "  ");
+  ss << usage << ENDL;
+  return ss.str();
+}
+//--------------------------------------------------------------------------------
+std::string DaemonCommandsHandler::get_adv_commands_str() {
+  std::stringstream ss;
+  ss << "Advanced Commands: " << ENDL;
+  std::string usage = m_consoleHandler.getUsageAdv();
   boost::replace_all(usage, "\n", "\n  ");
   usage.insert(0, "  ");
   ss << usage << ENDL;
@@ -141,8 +156,26 @@ bool DaemonCommandsHandler::exit(const std::vector<std::string>& args) {
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::help(const std::vector<std::string>& args) {
-  Common::Console::setTextColor(Common::Console::Color::BrightMagenta);
-  std::cout << get_commands_str() << ENDL;
+  std::cout << BrightGreenMsg("Basic Commands Descriptions") << std::endl;
+  showHelpTable();
+  return true;
+}
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::advanced(const std::vector<std::string>& args) {
+  std::cout << BrightGreenMsg("Advanced Commands Descriptions") << std::endl;
+  showAdvancedTable();
+  return true;
+}
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::helpUsage(const std::vector<std::string>& args) {
+  std::cout << BrightGreenMsg("Basic Commands Usage") << std::endl;
+  showHelpUsageTable();
+  return true;
+}
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::advancedUsage(const std::vector<std::string>& args) {
+  std::cout << BrightGreenMsg("Advanced Commands Usage") << std::endl;
+  showAdvancedUsageTable();
   return true;
 }
 //--------------------------------------------------------------------------------
@@ -152,11 +185,9 @@ bool DaemonCommandsHandler::print_pl(const std::vector<std::string>& args) {
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::show_hr(const std::vector<std::string>& args) {
-  if (!m_core.get_miner().is_mining())
-  {
+  if (!m_core.get_miner().is_mining()) {
     std::cout << "Mining is not started. You need to start mining before you can see hash rate." << ENDL;
-  } else
-  {
+  } else {
     m_core.get_miner().do_print_hashrate(true);
   }
   return true;
@@ -168,8 +199,7 @@ bool DaemonCommandsHandler::hide_hr(const std::vector<std::string>& args) {
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_bc_outs(const std::vector<std::string>& args) {
-  if (args.size() != 1)
-  {
+  if (args.size() != 1) {
     std::cout << "need file path as parameter" << ENDL;
     return true;
   }
@@ -438,3 +468,85 @@ bool DaemonCommandsHandler::stop_mining(const std::vector<std::string>& args) {
   m_core.get_miner().stop();
   return true;
 }
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::showHelpTable() {
+  Table helpTable;
+  /* helpTable items */
+  helpTable.add_row({"\"help\"", "Shows the Basic Commands Descriptions - This menu."});
+  helpTable.add_row({"\"advanced\"", "Shows the Advanced Commands Descriptions."});
+  helpTable.add_row({"\"help-usage\"", "Shows the Basic Commands Usage Guide."});
+  helpTable.add_row({"\"advanced-usage\"", "Shows the Advanced Usage Guide."});
+
+  helpTable.add_row({"\"exit\"", "Exits the Daemon safely."});
+  helpTable.add_row({"\"set_log\"", "Changes the log level of the Daemon."});
+  helpTable.add_row({"\"status\"", "Shows the current status of the Daemon."});
+  // Maybe split this into a new help command, mining-help? 
+  helpTable.add_row({"\"start_mining\"", "Starts mining with the Daemon to a certain address."});
+  helpTable.add_row({"\"stop_mining\"", "Stops the miner that you started."});
+  helpTable.add_row({"\"show_hr\"", "Shows the hashrate of your current miner."});
+  helpTable.add_row({"\"hide_hr\"", "Hides the hashrate of your current miner."});
+
+  /* format helpTable */
+  helpTable.column(0).format().font_align(FontAlign::left).font_color(Color::green);
+  helpTable.column(1).format().font_align(FontAlign::center).font_color(Color::magenta);
+  helpTable.format().corner_color(Color::grey).border_color(Color::grey);
+
+  std::cout << helpTable << std::endl;
+  return true;
+}
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::showAdvancedTable() {
+  Table advTable;
+  /* advTable items */
+  advTable.add_row({"\"rollback_chain\"", "Rollback the Blockchain to specific height."});
+  advTable.add_row({"\"print_cn\"", "Shows the known connections."});
+  advTable.add_row({"\"print_pl\"", "Shows the peer list."});
+  advTable.add_row({"\"print_bc\"", "Shows the Blockchains information in a given height range."});
+  advTable.add_row({"\"print_block\"", "Shows a blocks information."});
+  advTable.add_row({"\"print_stat\"", "Shows statistics of a block."});
+  advTable.add_row({"\"print_tx\"", "Print a transaction."});
+  advTable.add_row({"\"print_pool\"", "Shows the current transaction pool (long format)."});
+  advTable.add_row({"\"print_pool_sh\"", "Shows the current transaction pool (short format)."});
+
+  /* format advTable */
+  advTable.column(0).format().font_align(FontAlign::left).font_color(Color::green);
+  advTable.column(1).format().font_align(FontAlign::center).font_color(Color::magenta);
+  advTable.format().corner_color(Color::grey).border_color(Color::grey);
+
+  std::cout << advTable << std::endl;
+  return true;
+}
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::showHelpUsageTable() {
+  Table helpUseTable;
+  /* helpUseTable items */
+  helpUseTable.add_row({"\"set_log\"", "\"set_log 3\"\nThis will set the log level at 3.\nUse numbers 1-4 when changing the log level. 1 = no logging and 4 = max logging."});
+  helpUseTable.add_row({"\"start_mining\"", "\"start_mining ethiLfillYourAddressHere 4\"\nThis will start mining to the address \"ethiLfillYourAddressHere\" while using 4 threads."});
+
+  /* format helpUseTable */
+  helpUseTable.column(0).format().font_align(FontAlign::left).font_color(Color::green);
+  helpUseTable.column(1).format().font_align(FontAlign::center).font_color(Color::magenta);
+  helpUseTable.format().corner_color(Color::grey).border_color(Color::grey);
+
+  std::cout << helpUseTable << std::endl;
+  return true;
+}
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::showAdvancedUsageTable() {
+  Table advUseTable;
+  /* advUseTable items */
+  advUseTable.add_row({"\"rollback_chain\"", "\"rollback_chain 1\"\nThis will rollback the Blockchain to block 1.\n\"1\" = Block height."});
+  advUseTable.add_row({"\"print_bc\"", "\"print_bc 1 10\"\nThis will show the Blockchain information for blocks 1 to 10.\n\"1\" = Start height. \"10\" = End height."});
+  advUseTable.add_row({"\"print_block\"", "\"print_block as76db1298n7sna9f6afa8a5sd 1 4\"\nThis will show you block 1 in the Blockchain.\n\"as76db1298n7sna9f6afa8a5sd\" = Block hash. \"1\" = Block height."});
+  advUseTable.add_row({"\"print_stat\"", "\"print_stat as76db1298n7sna9f6afa8a5sd 1\"\nThis will show you the block statistics.\n\"as76db1298n7sna9f6afa8a5sd\" = Block hash. \"1\" = Block height.\nYou can use \"print_stat\" on its own to show the last blocks statistics."});
+  advUseTable.add_row({"\"print_tx\"", "\"print_tx tx76db1298n7sna9f6afa8a5sd12312zasd12csa\"\nThis will show you the transaction for \"tx76db1298n7sna9f6afa8a5sd12312zasd12csa\"\n\"tx76db1298n7sna9f6afa8a5sd12312zasd12csa\" = Transaction hash."});
+
+  /* format advUseTable */
+  advUseTable.column(0).format().font_align(FontAlign::left).font_color(Color::green);
+  advUseTable.column(1).format().font_align(FontAlign::center).font_color(Color::magenta);
+  advUseTable.format().corner_color(Color::grey).border_color(Color::grey);
+
+  std::cout << advUseTable << std::endl;
+  return true;
+}
+//--------------------------------------------------------------------------------
